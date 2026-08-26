@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>박용성 · 업무관리 대시보드 | 벌툰가맹부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF7F2; --line:#DDD3C4; --ink:#2A2520; --mute:#7A7268;
+    --accent:#F29801; --risk:#B4462F; --warn:#8A6A1F; --ok:#4A6B4E;
+    --card:#FDFBF7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Noto Sans KR","맑은 고딕",Malgun Gothic,sans-serif;
+    font-size:15px; line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .en{font-family:Georgia,serif; font-style:italic}
+  .num{font-family:Georgia,serif; font-variant-numeric:tabular-nums; font-style:normal}
+  h1,h2,h3{font-family:"Noto Serif KR",serif; font-weight:600; letter-spacing:-.01em; margin:0}
+  a{color:inherit}
+  .wrap{max-width:1160px; margin:0 auto; padding:0 24px 80px}
+
+  /* header */
+  header{border-bottom:.5px solid var(--line); margin-bottom:34px; padding:38px 0 22px}
+  .eyebrow{font-size:11.5px; letter-spacing:.18em; color:var(--mute); text-transform:uppercase; margin-bottom:10px}
+  h1{font-size:31px; line-height:1.25}
+  h1 .rule{display:block; width:44px; height:2px; background:var(--accent); margin:14px 0 0}
+  .meta{display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:16px; font-size:13px; color:var(--mute)}
+  .meta a{color:var(--ink); text-decoration:none; border-bottom:.5px solid var(--line)}
+  .meta a:hover{border-color:var(--accent)}
+
+  /* live refresh */
+  .live{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px}
+  button{font-family:inherit; font-size:13px; color:var(--ink); background:var(--card);
+    border:.5px solid var(--line); padding:7px 14px; cursor:pointer; border-radius:0}
+  button:hover{border-color:var(--accent)}
+  button:disabled{opacity:.5; cursor:default}
+  button.primary{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+  button.primary:hover{background:var(--accent); border-color:var(--accent)}
+  .status{font-size:12.5px; color:var(--mute)}
+  .status.err{color:var(--risk)}
+  .status.ok{color:var(--ok)}
+  .spin{display:inline-block; width:10px; height:10px; margin-right:6px; vertical-align:-1px;
+    border:1.5px solid var(--line); border-top-color:var(--accent); border-radius:50%;
+    animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){ .spin{animation:none} }
+
+  .tokbox{border:.5px solid var(--line); background:var(--card); padding:16px 18px; margin-top:14px; max-width:640px}
+  .tokbox h3{font-size:14px; margin-bottom:6px}
+  .tokbox p{font-size:12.5px; color:var(--mute); margin:0 0 12px}
+  .tokbox .r{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+  .tokbox input[type=password]{font-family:Georgia,serif; font-size:13px; flex:1; min-width:240px;
+    border:.5px solid var(--line); background:var(--bg); padding:8px 10px; outline:none}
+  .tokbox input[type=password]:focus{border-color:var(--accent)}
+  .tokbox label{font-size:12px; color:var(--mute); display:flex; align-items:center; gap:5px}
+  .tokbox .warn{font-size:11.5px; color:var(--mute); border-left:2px solid var(--accent);
+    padding-left:10px; margin-top:12px; line-height:1.6}
+  [hidden]{display:none !important}
+
+  /* section */
+  section{margin:0 0 42px}
+  .shead{display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+         border-bottom:.5px solid var(--line); padding-bottom:9px; margin-bottom:18px}
+  .shead h2{font-size:18px}
+  .shead .hint{font-size:12.5px; color:var(--mute)}
+
+  /* kpi */
+  .kpis{display:grid; grid-template-columns:repeat(6,1fr); gap:0; border:.5px solid var(--line); background:var(--card)}
+  .kpi{padding:16px 16px 14px; border-right:.5px solid var(--line)}
+  .kpi:last-child{border-right:0}
+  .kpi .lab{font-size:11.5px; color:var(--mute); letter-spacing:.04em}
+  .kpi .val{font-family:Georgia,serif; font-size:29px; line-height:1.2; margin-top:4px; font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:11.5px; color:var(--mute); margin-top:2px}
+  .kpi.hot .val{color:var(--risk)}
+  .kpi.acc .val{color:var(--accent)}
+
+  /* cards */
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:12px}
+  .card{border:.5px solid var(--line); background:var(--card); padding:14px 15px; text-decoration:none; display:block}
+  .card:hover{border-color:var(--accent)}
+  .card .tag{font-size:11px; color:var(--mute); letter-spacing:.03em}
+  .card .t{font-size:14.5px; font-weight:500; margin:5px 0 9px; line-height:1.45}
+  .card .row{display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--mute)}
+  .dday{font-family:Georgia,serif; font-style:normal; font-variant-numeric:tabular-nums; font-size:12px}
+  .dday.over{color:var(--risk); font-weight:700}
+  .dday.soon{color:var(--accent); font-weight:700}
+  .pill{display:inline-block; font-size:10.5px; padding:1px 7px; border:.5px solid var(--line); border-radius:999px; color:var(--mute)}
+  .pill.hi{color:var(--risk); border-color:#E3C4BC}
+  .pill.off{color:var(--warn); border-color:#E4D6AE}
+
+  /* charts */
+  .grid2{display:grid; grid-template-columns:1.35fr 1fr; gap:26px}
+  .panel{border:.5px solid var(--line); background:var(--card); padding:16px 18px 14px}
+  .panel h3{font-size:14px; margin-bottom:2px}
+  .panel .cap{font-size:11.5px; color:var(--mute); margin-bottom:12px}
+  .bars{display:grid; gap:7px}
+  .bar{display:grid; grid-template-columns:104px 1fr 38px; align-items:center; gap:10px; font-size:12.5px}
+  .bar .lab{color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .bar .track{height:9px; background:#EFE8DC}
+  .bar .fill{height:9px; background:var(--ink)}
+  .bar .fill.a{background:var(--accent)}
+  .bar .n{text-align:right; font-family:Georgia,serif; font-variant-numeric:tabular-nums; color:var(--mute)}
+  svg{display:block; width:100%; height:auto}
+  .axis{font-size:10px; fill:var(--mute); font-family:Georgia,serif}
+
+  /* table */
+  .tools{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; align-items:center}
+  .tools input,.tools select{
+    font-family:inherit; font-size:13px; color:var(--ink); background:var(--card);
+    border:.5px solid var(--line); padding:7px 10px; outline:none; border-radius:0
+  }
+  .tools input{min-width:220px; flex:1}
+  .tools input:focus,.tools select:focus{border-color:var(--accent)}
+  .tools .count{font-size:12px; color:var(--mute); margin-left:auto}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th{text-align:left; font-weight:500; font-size:11.5px; letter-spacing:.05em; color:var(--mute);
+     border-bottom:.5px solid var(--line); padding:8px 10px 8px 0; white-space:nowrap; cursor:pointer; user-select:none}
+  th:hover{color:var(--ink)}
+  td{padding:9px 10px 9px 0; border-bottom:.5px solid #EDE6DA; vertical-align:top}
+  tr:hover td{background:#F5F0E7}
+  td.nm a{text-decoration:none; border-bottom:.5px solid transparent}
+  td.nm a:hover{border-color:var(--accent)}
+  td.c{white-space:nowrap; color:var(--mute); font-family:Georgia,serif; font-variant-numeric:tabular-nums}
+  .dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; vertical-align:1px}
+  .dot.on{background:var(--ok)} .dot.off{background:var(--accent)}
+
+  footer{border-top:.5px solid var(--line); margin-top:14px; padding-top:16px; font-size:12px; color:var(--mute)}
+  footer code{font-family:Georgia,serif; background:#F1EADE; padding:1px 5px}
+  .note{border-left:2px solid var(--accent); padding:2px 0 2px 12px; margin:14px 0 0; font-size:12.5px; color:var(--mute)}
+
+  @media (max-width:900px){
+    .kpis{grid-template-columns:repeat(3,1fr)}
+    .kpi:nth-child(3){border-right:0}
+    .kpi:nth-child(-n+3){border-bottom:.5px solid var(--line)}
+    .grid2{grid-template-columns:1fr}
+    .hide-s{display:none}
+  }
+  @media (max-width:560px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi{border-right:.5px solid var(--line)}
+    .kpi:nth-child(2n){border-right:0}
+    h1{font-size:25px}
+  }
+  @media print{ body{background:#fff} .tools{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">벌툰가맹부 · 개인 업무 보드</div>
+  <h1>박용성 업무관리 대시보드<span class="rule"></span></h1>
+  <div class="meta">
+    <span>데이터 기준 <span class="num" id="snap"></span></span>
+    <span>원본 <a id="plink" href="#" target="_blank" rel="noopener">아사나 [업무] 벌툰가맹부 박용성 ↗</a></span>
+    <span id="range"></span>
+  </div>
+
+  <div class="live">
+    <button class="primary" id="btnSync">새로고침</button>
+    <button id="btnSave" hidden>data.json 내려받기</button>
+    <button id="btnForget" hidden>토큰 삭제</button>
+    <span class="status" id="syncMsg"></span>
+  </div>
+
+  <div class="tokbox" id="tokbox" hidden>
+    <h3>아사나 연결</h3>
+    <p>실시간 조회를 하려면 본인 계정의 개인 액세스 토큰(PAT)이 필요합니다.
+      아사나 → 프로필 사진 → My Settings → Apps → Manage Developer Apps →
+      <a href="https://app.asana.com/0/my-apps" target="_blank" rel="noopener">개발자 콘솔</a>에서 발급하세요.</p>
+    <div class="r">
+      <input type="password" id="pat" placeholder="아사나 개인 액세스 토큰 붙여넣기"
+             autocomplete="off" spellcheck="false">
+      <label><input type="checkbox" id="remember" checked> 이 브라우저에 저장</label>
+      <button class="primary" id="btnConnect">연결</button>
+      <button id="btnCancel">취소</button>
+    </div>
+    <div class="warn">토큰은 비밀번호와 같습니다. 이 값은 브라우저 안에만 저장되며 어디에도 전송되지 않고,
+      아사나 서버로만 직접 요청이 갑니다. 공용 PC에서는 저장을 끄고 쓰세요.
+      아사나 정책상 신규 토큰은 90일 후 만료되므로 그때 다시 발급받아 넣으면 됩니다.</div>
+  </div>
+</header>
+
+<section>
+  <div class="shead"><h2>한눈에 보기</h2><span class="hint">완료 기준 · 하위 태스크 제외</span></div>
+  <div class="kpis" id="kpis"></div>
+</section>
+
+<section>
+  <div class="shead"><h2>지금 잡고 있는 일</h2><span class="hint" id="openHint"></span></div>
+  <div class="cards" id="openCards"></div>
+</section>
+
+<section>
+  <div class="shead"><h2>흐름</h2><span class="hint">완료일 기준 주간 처리량과 업무 성격</span></div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>주간 완료 건수</h3>
+      <div class="cap">월요일 시작 주 단위 · 막대 위 숫자는 완료 건수</div>
+      <div id="weekly"></div>
+    </div>
+    <div class="panel">
+      <h3>업무 유형</h3>
+      <div class="cap">태스크명 앞 대괄호 분류 기준</div>
+      <div class="bars" id="byKind"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="grid2">
+    <div class="panel">
+      <h3>반복 업무 상위</h3>
+      <div class="cap">같은 이름으로 2회 이상 반복 — 자동화·위임 1순위 후보</div>
+      <div class="bars" id="repeat"></div>
+    </div>
+    <div class="panel">
+      <h3>우선순위 · 진행상태</h3>
+      <div class="cap">아사나 커스텀 필드 값 분포</div>
+      <div class="bars" id="byPri"></div>
+      <div style="height:14px"></div>
+      <div class="bars" id="bySt"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="shead"><h2>전체 업무 기록</h2><span class="hint">열 제목을 누르면 정렬</span></div>
+  <div class="tools">
+    <input id="q" type="search" placeholder="업무명 검색">
+    <select id="fKind"><option value="">유형 전체</option></select>
+    <select id="fDone"><option value="">완료/미완료 전체</option><option value="0">미완료만</option><option value="1">완료만</option></select>
+    <select id="fPri"><option value="">우선순위 전체</option></select>
+    <select id="fMonth"><option value="">기간 전체</option></select>
+    <span class="count" id="cnt"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th data-k="n">업무명</th>
+      <th data-k="k" class="hide-s">유형</th>
+      <th data-k="p" class="hide-s">우선순위</th>
+      <th data-k="s" class="hide-s">보드</th>
+      <th data-k="u">마감</th>
+      <th data-k="f">완료</th>
+      <th data-k="lead" class="hide-s">소요일</th>
+    </tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+</section>
+
+<footer>
+  <div><strong>갱신 방법</strong> — 상단 <strong>새로고침</strong>을 누르면 아사나 API에서 현재 등록된 업무를 그대로 다시 읽어옵니다.
+  방금 등록한 업무도 바로 반영됩니다. 토큰을 저장해두면 페이지를 열 때 자동으로 최신 상태를 불러옵니다.
+  <code>data.json 내려받기</code>로 받은 파일을 저장소에 올려두면, 토큰 없이 열었을 때 보이는 기본 스냅샷이 갱신됩니다.</div>
+  <div class="note">이 문서는 <strong>대외비</strong>입니다. 점포명·프로젝트명·내부 일정이 담겨 있으므로 공개 GitHub 저장소에는 올리지 마세요.
+  Private 저장소 또는 사내 전사공유 드라이브에 보관하세요. 아사나 토큰은 파일에 저장되지 않고 사용하는 브라우저에만 남습니다.</div>
+</footer>
+
+</div>
+
+<script id="seed" type="application/json">{"snapshot": "2026-08-26", "project": "[업무] 벌툰가맹부 박용성", "owner": "박용성", "projectUrl": "https://app.asana.com/1/1201518323194301/project/1215323540554407", "tasks": [{"id": "1217662922084131", "n": "정보공개서 개정 지원 및 검토", "k": "정책/제도", "d": 0, "c": "2026-08-20", "f": null, "u": "2026-08-28", "s": "할 일", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217662922084131"}, {"id": "1217807399468493", "n": "삼양 짜르르 콜라보 관련 1차 안내문 검토 및 공지", "k": "프로젝트", "d": 0, "c": "2026-08-25", "f": null, "u": "2026-08-25", "s": "할 일", "p": "중간", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217807399468493"}, {"id": "1217807399468499", "n": "OTT카페 신고 관련 논의 및 신고 실행", "k": "프로젝트", "d": 1, "c": "2026-08-25", "f": "2026-08-26", "u": "2026-08-25", "s": "할 일", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217807399468499"}, {"id": "1217849556003168", "n": "전사 회의 참석", "k": "행정", "d": 1, "c": "2026-08-26", "f": "2026-08-26", "u": "2026-08-26", "s": "할 일", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217849556003168"}, {"id": "1217849556003174", "n": "부서장 회의 참석", "k": "행정", "d": 1, "c": "2026-08-26", "f": "2026-08-26", "u": "2026-08-26", "s": "할 일", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217849556003174"}, {"id": "1216891139655563", "n": "AI자동화 및 아웃소싱 업무 R&R작성 시트 기입", "k": "정책/제도", "d": 0, "c": "2026-07-27", "f": null, "u": null, "s": "수행 중", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216891139655563"}, {"id": "1215785690513353", "n": "벌툰 브랜드 사명 수립", "k": "정책/제도", "d": 0, "c": "2026-06-17", "f": null, "u": null, "s": "수행 중", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 3, "url": "https://app.asana.com/0/0/1215785690513353"}, {"id": "1215819306669645", "n": "26년도 정보공개서 정식등록 일정 확인", "k": "정책/제도", "d": 0, "c": "2026-06-18", "f": null, "u": null, "s": "대기", "p": "높음", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 2, "url": "https://app.asana.com/0/0/1215819306669645"}, {"id": "1217351286976656", "n": "컨텐츠큐브 메인화면 커스터마이징 기획 회의", "k": "프로젝트", "d": 1, "c": "2026-08-12", "f": "2026-08-25", "u": "2026-08-25", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217351286976656"}, {"id": "1217662922084143", "n": "전일 회장님 보고 관련 피드백 반영 자료준비 및 추가 보고", "k": "프로젝트", "d": 1, "c": "2026-08-20", "f": "2026-08-25", "u": "2026-08-25", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217662922084143"}, {"id": "1217631741167965", "n": "OTT 브랜드 조사, 해지방어 전략 관련 회장님 보고", "k": "프로젝트", "d": 1, "c": "2026-08-19", "f": "2026-08-21", "u": "2026-08-20", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217631741167965"}, {"id": "1217807399468487", "n": "머더미스터리 게임 선정 후 구매", "k": "프로젝트", "d": 1, "c": "2026-08-25", "f": "2026-08-25", "u": "2026-08-25", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217807399468487"}, {"id": "1217758319151798", "n": "벌툰 가맹 주간회의", "k": "행정", "d": 1, "c": "2026-08-24", "f": "2026-08-25", "u": "2026-08-24", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217758319151798"}, {"id": "1217565826772025", "n": "통합 주간회의 참석", "k": "행정", "d": 1, "c": "2026-08-18", "f": "2026-08-18", "u": "2026-08-18", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217565826772025"}, {"id": "1217758319151804", "n": "영업관련 특이사항 공유 회의", "k": "행정", "d": 1, "c": "2026-08-24", "f": "2026-08-25", "u": "2026-08-24", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "아이센스PC, 벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217758319151804"}, {"id": "1217716258610329", "n": "인천송도 점포 관련 추가 검토", "k": "행정", "d": 1, "c": "2026-08-21", "f": "2026-08-21", "u": "2026-08-21", "s": "완료", "p": "중간", "st": "위험함", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217716258610329"}, {"id": "1217662922084137", "n": "인천삼산 점포 관련 추가 검토", "k": "행정", "d": 1, "c": "2026-08-20", "f": "2026-08-21", "u": "2026-08-20", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217662922084137"}, {"id": "1217662922084125", "n": "해지방어 전략 자료 최종 검토 및 보완", "k": "프로젝트", "d": 1, "c": "2026-08-20", "f": "2026-08-21", "u": "2026-08-20", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217662922084125"}, {"id": "1217662922084119", "n": "OTT 브랜드 방문 조사 자료 최종 검토 및 보완", "k": "프로젝트", "d": 1, "c": "2026-08-20", "f": "2026-08-21", "u": "2026-08-20", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217662922084119"}, {"id": "1217477863617955", "n": "해지방어 전략 기획안 1차 작성", "k": "프로젝트", "d": 1, "c": "2026-08-14", "f": "2026-08-19", "u": "2026-08-18", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217477863617955"}, {"id": "1217631741167959", "n": "전사회의 참석", "k": "행정", "d": 1, "c": "2026-08-19", "f": "2026-08-20", "u": "2026-08-19", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217631741167959"}, {"id": "1217631741167971", "n": "루원시티점 점포 평가", "k": "행정", "d": 1, "c": "2026-08-19", "f": "2026-08-20", "u": "2026-08-19", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217631741167971"}, {"id": "1217565826772031", "n": "벌툰 가맹부 주간회의 참석", "k": "행정", "d": 1, "c": "2026-08-18", "f": "2026-08-18", "u": "2026-08-18", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217565826772031"}, {"id": "1217565826772040", "n": "평택고덕점 점포 심사", "k": "행정", "d": 1, "c": "2026-08-18", "f": "2026-08-18", "u": "2026-08-18", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217565826772040"}, {"id": "1217565891460420", "n": "짜르르 콜라보 가격 확정 관련 내부 검토", "k": "프로젝트", "d": 1, "c": "2026-08-18", "f": "2026-08-19", "u": "2026-08-18", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217565891460420"}, {"id": "1217436282698182", "n": "챌린지 쇼츠 트렌드 리포트 바이브코딩 수정", "k": "프로젝트", "d": 1, "c": "2026-08-13", "f": "2026-08-18", "u": "2026-08-14", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217436282698182"}, {"id": "1217278677585523", "n": "진주혁신도시점 중고 도서 금액 확인", "k": "행정", "d": 1, "c": "2026-08-07", "f": "2026-08-13", "u": "2026-08-13", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217278677585523"}, {"id": "1217477863617949", "n": "봉담2지구점 점포 평가", "k": "행정", "d": 1, "c": "2026-08-14", "f": "2026-08-14", "u": "2026-08-14", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217477863617949"}, {"id": "1217436282698196", "n": "미금역점2 점포 평가", "k": "행정", "d": 1, "c": "2026-08-13", "f": "2026-08-14", "u": "2026-08-13", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217436282698196"}, {"id": "1217436282698190", "n": "상권분석기 바이브코딩 업데이트", "k": "프로젝트", "d": 1, "c": "2026-08-13", "f": "2026-08-14", "u": "2026-08-13", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217436282698190"}, {"id": "1217351286976632", "n": "냉음료 디스펜서 도입 관련 도면 매뉴얼 수립", "k": "정책/제도", "d": 1, "c": "2026-08-11", "f": "2026-08-13", "u": "2026-08-12", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217351286976632"}, {"id": "1217387827516871", "n": "선투자 프로모션 관련 점포 개편 회의", "k": "행정", "d": 1, "c": "2026-08-12", "f": "2026-08-12", "u": "2026-08-12", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217387827516871"}, {"id": "1217351286976626", "n": "진주혁신도시점 허니박스 도입 수량 파악 및 벤큐 재고 현황 파악, 준비", "k": "행정", "d": 1, "c": "2026-08-11", "f": "2026-08-13", "u": "2026-08-11", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217351286976626"}, {"id": "1217173475435482", "n": "OTT경쟁사 방문 위한 우선순위 지역 선정 및 외근 일정 수립", "k": "프로젝트", "d": 1, "c": "2026-08-05", "f": "2026-08-11", "u": "2026-08-10", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217173475435482"}, {"id": "1217351286976650", "n": "전사회의 참석", "k": "행정", "d": 1, "c": "2026-08-12", "f": "2026-08-12", "u": "2026-08-12", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217351286976650"}, {"id": "1217351286976644", "n": "짜르르 콜라보 관련 패키지 요금제 구상 논의", "k": "프로젝트", "d": 1, "c": "2026-08-11", "f": "2026-08-11", "u": "2026-08-11", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217351286976644"}, {"id": "1217351286976638", "n": "박민호주임 사업계획서 작성건 검토 및 피드백 논의 회의", "k": "행정", "d": 1, "c": "2026-08-11", "f": "2026-08-11", "u": "2026-08-11", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217351286976638"}, {"id": "1217099719145490", "n": "아이스티용 냉음료 디스펜서 도입 준비", "k": "프로젝트", "d": 1, "c": "2026-08-03", "f": "2026-08-11", "u": "2026-08-07", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099719145490"}, {"id": "1217278677585525", "n": "아이스티용 냉음료 디스펜서 테스트", "k": "정책/제도", "d": 1, "c": "2026-08-07", "f": "2026-08-10", "u": "2026-08-07", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217278677585525"}, {"id": "1217308742056146", "n": "삼양 콜라보 짜르르 시식", "k": "행정", "d": 1, "c": "2026-08-10", "f": "2026-08-10", "u": "2026-08-10", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217308742056146"}, {"id": "1217308742056140", "n": "영업관련 특이사항 공유 회의", "k": "행정", "d": 1, "c": "2026-08-10", "f": "2026-08-10", "u": "2026-08-10", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "아이센스PC, 벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217308742056140"}, {"id": "1217308742056134", "n": "벌툰 가맹부 주간회의", "k": "행정", "d": 1, "c": "2026-08-10", "f": "2026-08-10", "u": "2026-08-10", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217308742056134"}, {"id": "1217099655530106", "n": "사입 개선 위한 필수 항목 분류 및 시트 정리", "k": "정책/제도", "d": 1, "c": "2026-08-04", "f": "2026-08-07", "u": "2026-08-05", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099655530106"}, {"id": "1217173475435475", "n": "전사회의 참석", "k": "행정", "d": 1, "c": "2026-08-05", "f": "2026-08-07", "u": "2026-08-05", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217173475435475"}, {"id": "1217209115941446", "n": "짜르르 기획 회의", "k": "행정", "d": 1, "c": "2026-08-06", "f": "2026-08-07", "u": "2026-08-06", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217209115941446"}, {"id": "1217099655530094", "n": "요금제 개편 위한 투표 진행안 논의", "k": "정책/제도", "d": 1, "c": "2026-08-04", "f": "2026-08-04", "u": "2026-08-04", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099655530094"}, {"id": "1217099655530100", "n": "가맹부 내부 논의(회의)", "k": "행정", "d": 1, "c": "2026-08-04", "f": "2026-08-04", "u": "2026-08-04", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099655530100"}, {"id": "1217138362149233", "n": "자양역점 점포 심사", "k": "행정", "d": 1, "c": "2026-08-04", "f": "2026-08-04", "u": "2026-08-04", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217138362149233"}, {"id": "1217138362149226", "n": "미금점 점포 심사", "k": "행정", "d": 1, "c": "2026-08-04", "f": "2026-08-04", "u": "2026-08-04", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217138362149226"}, {"id": "1217138362149219", "n": "인천삼산점 점포 심사", "k": "행정", "d": 1, "c": "2026-08-04", "f": "2026-08-04", "u": "2026-08-04", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217138362149219"}, {"id": "1217099655530078", "n": "베스트메뉴 배너 시안 확정 위한 판매량 집계", "k": "정책/제도", "d": 1, "c": "2026-08-03", "f": "2026-08-04", "u": "2026-08-04", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099655530078"}, {"id": "1217099719145496", "n": "벌툰 가맹부 주간회의", "k": "행정", "d": 1, "c": "2026-08-03", "f": "2026-08-04", "u": "2026-08-03", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099719145496"}, {"id": "1217099655530084", "n": "예상매출 산정서 개정 관련 변경 진행", "k": "정책/제도", "d": 1, "c": "2026-08-04", "f": "2026-08-04", "u": "2026-08-03", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099655530084"}, {"id": "1217006982870972", "n": "가맹부 주간보고 전 사전 회의", "k": "행정", "d": 1, "c": "2026-07-31", "f": "2026-07-31", "u": "2026-07-31", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217006982870972"}, {"id": "1217099655530067", "n": "영업부 회의", "k": "행정", "d": 1, "c": "2026-08-03", "f": "2026-08-04", "u": "2026-08-03", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217099655530067"}, {"id": "1217006982870966", "n": "아이스티용 냉음료 디스펜서 관련 소통", "k": "프로젝트", "d": 1, "c": "2026-07-30", "f": "2026-08-03", "u": "2026-07-31", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217006982870966"}, {"id": "1216936133655970", "n": "탄산 판매량 데이터 정리(클로드)", "k": "프로젝트", "d": 1, "c": "2026-07-29", "f": "2026-07-31", "u": "2026-07-30", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216936133655970"}, {"id": "1216951256436029", "n": "벌툰 압구정로데오점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-29", "f": "2026-07-30", "u": "2026-07-29", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216951256436029"}, {"id": "1217006982870943", "n": "벌툰 논산점3 상권 분석", "k": "행정", "d": 1, "c": "2026-07-30", "f": "2026-07-30", "u": "2026-07-30", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217006982870943"}, {"id": "1216951256436036", "n": "매출보고 형식 공유 회의 참석", "k": "정책/제도", "d": 1, "c": "2026-07-29", "f": "2026-07-30", "u": "2026-07-29", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216951256436036"}, {"id": "1216744810131596", "n": "만화카페 인허가 기획서 제작 관련 내용 보완", "k": "프로젝트", "d": 1, "c": "2026-07-22", "f": "2026-07-27", "u": "2026-07-22", "s": "완료", "p": "높음", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131596"}, {"id": "1217042396398944", "n": "가맹부 회장님 주간보고", "k": "행정", "d": 1, "c": "2026-07-31", "f": "2026-07-31", "u": "2026-07-31", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217042396398944"}, {"id": "1217006982870959", "n": "삼양 콜라보 메뉴 출시 관련 품평회", "k": "프로젝트", "d": 1, "c": "2026-07-30", "f": "2026-07-30", "u": "2026-07-30", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217006982870959"}, {"id": "1217006982870952", "n": "상권분석기 기능 업데이트(바이브코딩)", "k": "프로젝트", "d": 1, "c": "2026-07-30", "f": "2026-08-03", "u": "2026-07-30", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1217006982870952"}, {"id": "1216895157604561", "n": "신규 입사자 소개PT 발표 참석", "k": "행정", "d": 1, "c": "2026-07-28", "f": "2026-07-28", "u": "2026-07-28", "s": "완료", "p": "낮음", "st": "계획대로 진행 중", "b": "미지정", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216895157604561"}, {"id": "1216805692371756", "n": "회장님 보고 진행(주간)", "k": "프로젝트", "d": 1, "c": "2026-07-23", "f": "2026-07-27", "u": "2026-07-23", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216805692371756"}, {"id": "1216744686198359", "n": "밀실 예방 캠페인 관공서 제출용 제안서 작성", "k": "프로젝트", "d": 1, "c": "2026-07-21", "f": "2026-07-27", "u": "2026-07-22", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744686198359"}, {"id": "1216805692371763", "n": "신규 입사자 소개PT 발표 참석", "k": "행정", "d": 1, "c": "2026-07-23", "f": "2026-07-23", "u": "2026-07-23", "s": "완료", "p": "낮음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216805692371763"}, {"id": "1216805692371750", "n": "선릉점 지원 내역 및 금액 정리", "k": "프로젝트", "d": 1, "c": "2026-07-23", "f": "2026-07-23", "u": "2026-07-23", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216805692371750"}, {"id": "1216805692371743", "n": "상권분석기 위젯 배포용 파일과 가이드 제작, 가맹부 배포", "k": "프로젝트", "d": 1, "c": "2026-07-23", "f": "2026-07-23", "u": "2026-07-23", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216805692371743"}, {"id": "1216744810131628", "n": "가맹부 업무중 AI자동화 또는 아웃소싱 가능 업무 분류 및 이미 완료한 업무 기록", "k": "프로젝트", "d": 1, "c": "2026-07-22", "f": "2026-07-23", "u": "2026-07-24", "s": "완료", "p": "높음", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131628"}, {"id": "1216579514176806", "n": "만화카페 인허가 매뉴얼 보고 피드백 반영 수정(1차 완료)", "k": "프로젝트", "d": 1, "c": "2026-07-15", "f": "2026-07-22", "u": "2026-07-22", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216579514176806"}, {"id": "1216703877008606", "n": "전사 바이브코딩 교육 참석(보류)", "k": "행정", "d": 1, "c": "2026-07-20", "f": "2026-07-20", "u": "2026-07-20", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216703877008606"}, {"id": "1216744810131588", "n": "브랜드 특이사항 공유 회의", "k": "행정", "d": 1, "c": "2026-07-21", "f": "2026-07-21", "u": "2026-07-21", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131588"}, {"id": "1216612774859137", "n": "밀실 예방 캠페인 기획서 작성", "k": "프로젝트", "d": 1, "c": "2026-07-16", "f": "2026-07-22", "u": "2026-07-21", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216612774859137"}, {"id": "1216703876837916", "n": "벌툰 가맹부 주간회의", "k": "행정", "d": 1, "c": "2026-07-20", "f": "2026-07-20", "u": "2026-07-20", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216703876837916"}, {"id": "1216744810131582", "n": "벌툰 가맹계약서 개정 관련 내용 검토", "k": "정책/제도", "d": 1, "c": "2026-07-21", "f": "2026-07-22", "u": "2026-07-21", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131582"}, {"id": "1216612774859123", "n": "안양1번가점 복합유통게임제공업 진행관련 사례 파악 및 ai 조사", "k": "정책/제도", "d": 1, "c": "2026-07-16", "f": "2026-07-21", "u": "2026-07-21", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216612774859123"}, {"id": "1216579514176800", "n": "벌툰데이 기획 보고 피드백 반영 수정", "k": "프로젝트", "d": 1, "c": "2026-07-15", "f": "2026-07-15", "u": "2026-07-16", "s": "완료", "p": "높음", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216579514176800"}, {"id": "1216951256436023", "n": "전사회의 참석", "k": "행정", "d": 1, "c": "2026-07-29", "f": "2026-07-29", "u": "2026-07-29", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216951256436023"}, {"id": "1216951256436016", "n": "벌툰 선투자 프로모션 관련 추가 논의", "k": "프로젝트", "d": 1, "c": "2026-07-28", "f": "2026-07-29", "u": "2026-07-28", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216951256436016"}, {"id": "1216891139655581", "n": "벌툰 창업프로모션 최종 보고 회의 참석", "k": "정책/제도", "d": 1, "c": "2026-07-28", "f": "2026-07-28", "u": "2026-07-27", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216891139655581"}, {"id": "1216612774859130", "n": "벌툰 창업 프로모션 관련 회의", "k": "정책/제도", "d": 1, "c": "2026-07-16", "f": "2026-07-16", "u": "2026-07-16", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216612774859130"}, {"id": "1216496185933726", "n": "가맹해지 방어 프로세스에 전자서명 사용 정황 내용 추가하여 기획서 수정", "k": "프로젝트", "d": 1, "c": "2026-07-13", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216496185933726"}, {"id": "1216744810131616", "n": "벌툰 부천시청역점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-22", "f": "2026-07-22", "u": "2026-07-22", "s": "완료", "p": "높음", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131616"}, {"id": "1216744810131622", "n": "벌툰 대전목원대점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-22", "f": "2026-07-22", "u": "2026-07-22", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131622"}, {"id": "1216744810131610", "n": "클로드 위젯 상권분석기 개선 작업(v5.0->v6.0)", "k": "프로젝트", "d": 1, "c": "2026-07-22", "f": "2026-07-22", "u": "2026-07-22", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131610"}, {"id": "1216744810131604", "n": "벌툰 노량진점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-22", "f": "2026-07-22", "u": "2026-07-22", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216744810131604"}, {"id": "1216891139655557", "n": "선릉점 최종 지원 내역 정리 및 보고", "k": "프로젝트", "d": 1, "c": "2026-07-27", "f": "2026-07-28", "u": "2026-07-27", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216891139655557"}, {"id": "1216374420028728", "n": "경쟁업체 대응 기획 보완, 자료 검토 2차", "k": "프로젝트", "d": 1, "c": "2026-07-09", "f": "2026-07-14", "u": "2026-07-16", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216374420028728"}, {"id": "1216496185933720", "n": "벌툰 파주운정점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-13", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216496185933720"}, {"id": "1216891139655575", "n": "벌툰 상권분석기 전면 업데이트(카카오맵API 적용)", "k": "프로젝트", "d": 1, "c": "2026-07-27", "f": "2026-07-28", "u": "2026-07-28", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216891139655575"}, {"id": "1216891139655569", "n": "벌툰 망포점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-27", "f": "2026-07-27", "u": "2026-07-27", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216891139655569"}, {"id": "1216496185933733", "n": "금일 보고건 내용 마무리 및 보고 진행", "k": "보고", "d": 1, "c": "2026-07-14", "f": "2026-07-14", "u": "2026-07-14", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216496185933733"}, {"id": "1216547905985694", "n": "상반기 과/면세 매출 내역 자료 정리 후 전달", "k": "행정", "d": 1, "c": "2026-07-14", "f": "2026-07-14", "u": "2026-07-14", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216547905985694"}, {"id": "1215394141742462", "n": "부정경쟁방지 자료 준비(장기)", "k": "프로젝트", "d": 1, "c": "2026-06-04", "f": "2026-07-14", "u": "2026-06-30", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 4, "url": "https://app.asana.com/0/0/1215394141742462"}, {"id": "1216479836985099", "n": "1분기 과/면세 매출 내역 자료 정리 후 전달", "k": "행정", "d": 1, "c": "2026-07-13", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216479836985099"}, {"id": "1216479836985093", "n": "영업 관련 특이사항 공유 회의", "k": "행정", "d": 1, "c": "2026-07-13", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216479836985093"}, {"id": "1216479836985081", "n": "벌툰 양천구청점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-13", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216479836985081"}, {"id": "1216479836985087", "n": "진주 예정 점포 관련 예상 매출 정리 및 전달", "k": "행정", "d": 1, "c": "2026-07-13", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216479836985087"}, {"id": "1216479836985075", "n": "벌툰 광교아비뉴프랑점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-13", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216479836985075"}, {"id": "1216388744195747", "n": "전자서명 사용 해지협의서 정황 파악 및 논의", "k": "정책/제도", "d": 1, "c": "2026-07-09", "f": "2026-07-13", "u": "2026-07-13", "s": "완료", "p": "중간", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216388744195747"}, {"id": "1216388744195738", "n": "SV면접", "k": "행정", "d": 1, "c": "2026-07-09", "f": "2026-07-10", "u": "2026-07-10", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216388744195738"}, {"id": "1216411618945043", "n": "벌툰 프로모션 회의(1차)", "k": "정책/제도", "d": 1, "c": "2026-07-09", "f": "2026-07-09", "u": "2026-07-09", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216411618945043"}, {"id": "1216317513223918", "n": "경쟁업체 대응 기획 보완, 자료 검토 1차", "k": "프로젝트", "d": 1, "c": "2026-07-07", "f": "2026-07-07", "u": "2026-07-07", "s": "완료", "p": "높음", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216317513223918"}, {"id": "1216411618945059", "n": "벌툰 가맹부 개인 OKR 수립 관련 피드백 미팅", "k": "정책/제도", "d": 1, "c": "2026-07-09", "f": "2026-07-09", "u": "2026-07-09", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216411618945059"}, {"id": "1216411618945067", "n": "벌툰데이 가이드안 작성", "k": "프로젝트", "d": 1, "c": "2026-07-10", "f": "2026-07-10", "u": "2026-07-13", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216411618945067"}, {"id": "1216317353784082", "n": "벌툰 가맹부 R&R작성(1차)", "k": "정책/제도", "d": 1, "c": "2026-07-07", "f": "2026-07-10", "u": "2026-07-10", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216317353784082"}, {"id": "1216317513219398", "n": "SV 면접", "k": "행정", "d": 1, "c": "2026-07-07", "f": "2026-07-09", "u": "2026-07-09", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216317513219398"}, {"id": "1216317513219404", "n": "벌툰 가맹부 개인 OKR 수립(1차 작성)", "k": "정책/제도", "d": 1, "c": "2026-07-07", "f": "2026-07-07", "u": "2026-07-07", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216317513219404"}, {"id": "1216285079649672", "n": "가맹부 부서 회의", "k": "정책/제도", "d": 1, "c": "2026-07-06", "f": "2026-07-06", "u": "2026-07-06", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216285079649672"}, {"id": "1216285079649681", "n": "알앤디 신메뉴 기획 회의", "k": "정책/제도", "d": 1, "c": "2026-07-06", "f": "2026-07-06", "u": "2026-07-06", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216285079649681"}, {"id": "1216285079649666", "n": "이력서 내부 최종 논의 후 인사팀 전달", "k": "행정", "d": 1, "c": "2026-07-06", "f": "2026-07-06", "u": "2026-07-06", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216285079649666"}, {"id": "1215613792093774", "n": "오픈 리뷰 이벤트 홍보물 제작", "k": "정책/제도", "d": 1, "c": "2026-06-11", "f": "2026-06-29", "u": "2026-06-17", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박민호", "sub": 5, "url": "https://app.asana.com/0/0/1215613792093774"}, {"id": "1216223311132166", "n": "SV 면접(불참 취소)", "k": "행정", "d": 1, "c": "2026-07-02", "f": "2026-07-06", "u": "2026-07-06", "s": "완료", "p": "중간", "st": "계획에서 벗어남", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216223311132166"}, {"id": "1216254612099191", "n": "전사 목표 설정 설명회 참석", "k": "전사", "d": 1, "c": "2026-07-03", "f": "2026-07-06", "u": "2026-07-03", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216254612099191"}, {"id": "1216254612099183", "n": "SV 채용 지원자 이력서 검토", "k": "행정", "d": 1, "c": "2026-07-03", "f": "2026-07-06", "u": "2026-07-03", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216254612099183"}, {"id": "1216223311132172", "n": "외부 미팅", "k": "외근", "d": 1, "c": "2026-07-02", "f": "2026-07-03", "u": "2026-07-02", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216223311132172"}, {"id": "1216101065515655", "n": "외부 미팅", "k": "외근", "d": 1, "c": "2026-06-29", "f": "2026-06-30", "u": "2026-06-29", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216101065515655"}, {"id": "1216144197874586", "n": "2분기 판매 매출자료 정산", "k": "행정", "d": 1, "c": "2026-07-01", "f": "2026-07-01", "u": "2026-07-01", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216144197874586"}, {"id": "1216058939469248", "n": "SV 면접", "k": "행정", "d": 1, "c": "2026-06-26", "f": "2026-07-01", "u": "2026-06-30", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216058939469248"}, {"id": "1216144197874577", "n": "벌툰 진주혁신도시점 상권 분석", "k": "행정", "d": 1, "c": "2026-07-01", "f": "2026-07-01", "u": "2026-07-01", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216144197874577"}, {"id": "1216101065508018", "n": "OTT브랜드 법적 위반사항 관련 조사", "k": "정책/제도", "d": 1, "c": "2026-06-29", "f": "2026-07-01", "u": "2026-06-30", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 1, "url": "https://app.asana.com/0/0/1216101065508018"}, {"id": "1216101065508003", "n": "만화카페 인허가 관련 조사", "k": "정책/제도", "d": 1, "c": "2026-06-29", "f": "2026-07-01", "u": "2026-06-30", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 1, "url": "https://app.asana.com/0/0/1216101065508003"}, {"id": "1215392130357958", "n": "신논현점 매출조저 관리", "k": "프로젝트", "d": 1, "c": "2026-06-04", "f": "2026-06-29", "u": "2026-06-26", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "유창윤", "sub": 5, "url": "https://app.asana.com/0/0/1215392130357958"}, {"id": "1216058939469263", "n": "벌툰 프로젝트 보고(1차)", "k": "프로젝트", "d": 1, "c": "2026-06-26", "f": "2026-06-29", "u": "2026-06-26", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216058939469263"}, {"id": "1215819306669659", "n": "유튜브쇼츠API활용 트렌드 분석 사이트 제작(1차 완료)", "k": "프로젝트", "d": 1, "c": "2026-06-18", "f": "2026-06-23", "u": "2026-06-23", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215819306669659"}, {"id": "1215478652505953", "n": "본부장 전사발표 자료 준비", "k": "전사", "d": 1, "c": "2026-06-08", "f": "2026-06-10", "u": "2026-06-10", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215478652505953"}, {"id": "1215440436262243", "n": "벤큐 선매입 및 앱손 제품 변경 관련 회장님 보고 내용 논의(+구매물류)", "k": "프로젝트", "d": 1, "c": "2026-06-05", "f": "2026-06-08", "u": "2026-06-05", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215440436262243"}, {"id": "1215819306669653", "n": "이슈 매장 방문(신논현점), 법무법인 미팅", "k": "외근", "d": 1, "c": "2026-06-18", "f": "2026-06-22", "u": "2026-06-19", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215819306669653"}, {"id": "1216058939469256", "n": "SV채용 이력서 검토(2차)", "k": "행정", "d": 1, "c": "2026-06-26", "f": "2026-06-26", "u": "2026-06-26", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1216058939469256"}, {"id": "1215895401509812", "n": "SV채용 이력서 검토(1차)", "k": "행정", "d": 1, "c": "2026-06-22", "f": "2026-06-25", "u": "2026-06-22", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 2, "url": "https://app.asana.com/0/0/1215895401509812"}, {"id": "1215895401509804", "n": "신논현점 상권분석 자료 수집 및 담당자 전달", "k": "매장관리", "d": 1, "c": "2026-06-22", "f": "2026-06-22", "u": "2026-06-22", "s": "완료", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215895401509804"}, {"id": "1215394141742452", "n": "부정경쟁방지 소송과 업무방해 소송건 연관 관계 조사", "k": "프로젝트", "d": 1, "c": "2026-06-04", "f": "2026-06-05", "u": "2026-06-05", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215394141742452"}, {"id": "1215819372698528", "n": "벌툰 부서장 회의", "k": "정책/제도", "d": 1, "c": "2026-06-18", "f": "2026-06-18", "u": "2026-06-17", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215819372698528"}, {"id": "1215394141742467", "n": "벌툰 인형/MD 판매 보고", "k": "프로젝트", "d": 1, "c": "2026-06-04", "f": "2026-06-04", "u": "2026-06-04", "s": "완료", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "한지민", "sub": 0, "url": "https://app.asana.com/0/0/1215394141742467"}, {"id": "1215478652625790", "n": "부정경쟁방지 1차 정리 브리핑 회의 참석", "k": "회의", "d": 1, "c": "2026-06-08", "f": "2026-06-09", "u": "2026-06-08", "s": "완료", "p": "높음", "st": "위험함", "b": "벌툰", "a": "박용성", "sub": 0, "url": "https://app.asana.com/0/0/1215478652625790"}, {"id": "1215440436262232", "n": "사운드바 서칭 제품 검토", "k": "프로젝트", "d": 0, "c": "2026-06-05", "f": null, "u": "2026-06-19", "s": "보류중", "p": "중간", "st": "계획에서 벗어남", "b": "벌툰", "a": "박민호", "sub": 4, "url": "https://app.asana.com/0/0/1215440436262232"}, {"id": "1215394141742457", "n": "ai활용 운영혁신안 내용 업데이트", "k": "정책/제도", "d": 0, "c": "2026-06-04", "f": null, "u": "2026-06-30", "s": "보류중", "p": "높음", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 3, "url": "https://app.asana.com/0/0/1215394141742457"}, {"id": "1215819372698538", "n": "탄산 디스펜서 도입 조사", "k": "프로젝트", "d": 0, "c": "2026-06-18", "f": null, "u": null, "s": "보류중", "p": "중간", "st": "계획대로 진행 중", "b": "벌툰", "a": "박용성", "sub": 3, "url": "https://app.asana.com/0/0/1215819372698538"}]}</script>
+<script>
+(function(){
+  "use strict";
+  var EMB = JSON.parse(document.getElementById('seed').textContent);
+  var D = EMB, T = [];
+
+  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var pad = function(n){ return n<10 ? '0'+n : ''+n; };
+  var toDate = function(s){ if(!s) return null; var p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); };
+  var days = function(a,b){ return Math.round((b-a)/86400000); };
+  var fmt = function(s){ return s ? s.slice(5).replace('-','.') : '—'; };
+
+  function boot(d){
+    D = d; T = d.tasks;
+    var today = toDate(d.snapshot);
+    T.forEach(function(t){
+      t.dueD = toDate(t.u); t.finD = toDate(t.f); t.creD = toDate(t.c);
+      t.lead = (t.creD && t.finD) ? days(t.creD, t.finD) : null;
+      t.dday = t.dueD ? days(today, t.dueD) : null;
+      t.late = (!t.d && t.dueD && t.dday < 0);
+      t.month = t.f ? t.f.slice(0,7) : (t.c ? t.c.slice(0,7) : '');
+    });
+    document.getElementById('snap').textContent = d.snapshot + (d.fetchedAt ? ' (실시간)' : '');
+    document.getElementById('plink').href = d.projectUrl;
+    var ds = T.map(function(t){return t.c;}).filter(Boolean).sort();
+    document.getElementById('range').textContent = '기록 기간 ' + ds[0] + ' ~ ' + d.snapshot;
+    kpis(today); openList(); weekly(); kinds(); repeats(); dists(); tableInit();
+  }
+
+  /* ---------- KPI ---------- */
+  function kpis(today){
+    var done = T.filter(function(t){return t.d;});
+    var open = T.filter(function(t){return !t.d;});
+    var late = open.filter(function(t){return t.late;});
+    var wk = done.filter(function(t){return t.finD && days(t.finD,today) < 7;});
+    var leads = done.map(function(t){return t.lead;}).filter(function(v){return v!=null;});
+    var avg = leads.reduce(function(a,b){return a+b;},0)/(leads.length||1);
+    var onTime = done.filter(function(t){return t.dueD && t.finD;});
+    var kept = onTime.filter(function(t){return t.finD <= t.dueD;}).length;
+    var kept1 = onTime.filter(function(t){return days(t.dueD, t.finD) <= 1;}).length;
+
+    var K = [
+      ['전체 업무', T.length, '건 누적', ''],
+      ['완료', done.length, Math.round(done.length/T.length*100)+'% 완료율', ''],
+      ['진행 중', open.length, '미완료 잔여', 'acc'],
+      ['마감 초과', late.length, late.length ? '즉시 확인 필요' : '없음', late.length?'hot':''],
+      ['최근 7일 완료', wk.length, '주간 처리량', ''],
+      ['평균 소요', avg.toFixed(1), '생성→완료 (일)', '']
+    ];
+    document.getElementById('kpis').innerHTML = K.map(function(k){
+      return '<div class="kpi '+k[3]+'"><div class="lab">'+k[0]+'</div><div class="val">'+k[1]+
+             '</div><div class="sub">'+esc(k[2])+'</div></div>';
+    }).join('');
+    document.getElementById('openHint').textContent =
+      '미완료 ' + open.length + '건 · 마감일 내 완료 ' + Math.round(kept/(onTime.length||1)*100) +
+      '% (익일 마감처리 포함 ' + Math.round(kept1/(onTime.length||1)*100) + '%)';
+  }
+
+  /* ---------- 미완료 카드 ---------- */
+  function openList(){
+    var open = T.filter(function(t){return !t.d;}).sort(function(a,b){
+      var x = a.dday==null ? 9999 : a.dday, y = b.dday==null ? 9999 : b.dday;
+      return x-y;
+    });
+    document.getElementById('openCards').innerHTML = open.map(function(t){
+      var cls='', txt='마감 미정';
+      if(t.dday!=null){
+        if(t.dday<0){ cls='over'; txt='D+'+Math.abs(t.dday)+' 초과'; }
+        else if(t.dday===0){ cls='soon'; txt='오늘 마감'; }
+        else { cls = t.dday<=3?'soon':''; txt='D-'+t.dday; }
+      }
+      var pri = t.p==='높음' ? '<span class="pill hi">높음</span>' : '<span class="pill">'+esc(t.p)+'</span>';
+      var st  = t.st==='계획대로 진행 중' ? '' : ' <span class="pill off">'+esc(t.st)+'</span>';
+      return '<a class="card" href="'+t.url+'" target="_blank" rel="noopener">'+
+        '<div class="tag">'+esc(t.k)+' · '+esc(t.s)+(t.sub?' · 하위 '+t.sub:'')+'</div>'+
+        '<div class="t">'+esc(t.n)+'</div>'+
+        '<div class="row"><span>'+pri+st+'</span><span class="dday '+cls+'">'+txt+'</span></div></a>';
+    }).join('');
+  }
+
+  /* ---------- 주간 완료 추이 ---------- */
+  function weekly(){
+    var byW = {};
+    T.filter(function(t){return t.d && t.finD;}).forEach(function(t){
+      var dt = new Date(t.finD); var dow = (dt.getDay()+6)%7;
+      dt.setDate(dt.getDate()-dow);
+      var k = dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate());
+      byW[k] = (byW[k]||0)+1;
+    });
+    var keys = Object.keys(byW).sort();
+    var max = Math.max.apply(null, keys.map(function(k){return byW[k];}));
+    var W=560, H=200, PL=6, PB=30, PT=22, bw = (W-PL*2)/keys.length;
+    var bars = keys.map(function(k,i){
+      var v=byW[k], h=(H-PB-PT)*v/max, x=PL+i*bw, y=H-PB-h;
+      var lab = k.slice(5).replace('-','/');
+      return '<rect x="'+(x+bw*0.16)+'" y="'+y+'" width="'+(bw*0.68)+'" height="'+h+'" fill="#2A2520"></rect>'+
+             '<text class="axis" x="'+(x+bw/2)+'" y="'+(y-6)+'" text-anchor="middle">'+v+'</text>'+
+             '<text class="axis" x="'+(x+bw/2)+'" y="'+(H-PB+14)+'" text-anchor="middle">'+lab+'</text>';
+    }).join('');
+    document.getElementById('weekly').innerHTML =
+      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="주간 완료 건수 막대그래프">'+
+      '<line x1="'+PL+'" y1="'+(H-PB)+'" x2="'+(W-PL)+'" y2="'+(H-PB)+'" stroke="#DDD3C4" stroke-width="1"></line>'+
+      bars+'</svg>';
+  }
+
+  /* ---------- 막대 리스트 ---------- */
+  function barList(el, pairs, accentFirst){
+    var max = Math.max.apply(null, pairs.map(function(p){return p[1];}));
+    el.innerHTML = pairs.map(function(p,i){
+      return '<div class="bar"><span class="lab" title="'+esc(p[0])+'">'+esc(p[0])+'</span>'+
+        '<span class="track"><span class="fill'+(accentFirst&&i===0?' a':'')+'" style="width:'+
+        (p[1]/max*100)+'%"></span></span><span class="n">'+p[1]+'</span></div>';
+    }).join('');
+  }
+  function tally(arr){
+    var m={}; arr.forEach(function(v){ m[v]=(m[v]||0)+1; });
+    return Object.keys(m).map(function(k){return [k,m[k]];}).sort(function(a,b){return b[1]-a[1];});
+  }
+
+  function kinds(){ barList(document.getElementById('byKind'), tally(T.map(function(t){return t.k;})), true); }
+  function dists(){
+    var order={'높음':0,'중간':1,'낮음':2,'미지정':3};
+    var p = tally(T.map(function(t){return t.p;})).sort(function(a,b){return (order[a[0]]||9)-(order[b[0]]||9);});
+    barList(document.getElementById('byPri'), p, false);
+    barList(document.getElementById('bySt'), tally(T.map(function(t){return t.st;})), false);
+  }
+  function repeats(){
+    var m={};
+    T.forEach(function(t){
+      var key = t.n.replace(/\s*\((.*?)\)\s*/g,'').replace(/\s+/g,' ').replace(/\d+차$/,'').trim();
+      m[key] = m[key]||{n:0,k:t.k};
+      m[key].n++;
+    });
+    var top = Object.keys(m).filter(function(k){return m[k].n>1;})
+      .map(function(k){return [k, m[k].n];})
+      .sort(function(a,b){return b[1]-a[1];}).slice(0,8);
+    if(!top.length){ document.getElementById('repeat').innerHTML='<div class="cap">반복 업무 없음</div>'; return; }
+    barList(document.getElementById('repeat'), top, true);
+  }
+
+  /* ---------- 테이블 ---------- */
+  var sortKey='f', sortDir=-1, bound=false;
+  function tableInit(){
+    fill('fKind', tally(T.map(function(t){return t.k;})).map(function(p){return p[0];}));
+    fill('fPri', ['높음','중간','낮음','미지정'].filter(function(v){
+      return T.some(function(t){return t.p===v;}); }));
+    var ms = {}; T.forEach(function(t){ if(t.month) ms[t.month]=1; });
+    fill('fMonth', Object.keys(ms).sort().reverse());
+    if(!bound){
+      bound = true;
+      ['q','fKind','fDone','fPri','fMonth'].forEach(function(id){
+        document.getElementById(id).addEventListener('input', render);
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('th[data-k]'), function(th){
+        th.addEventListener('click', function(){
+          var k = th.getAttribute('data-k');
+          if(sortKey===k){ sortDir*=-1; } else { sortKey=k; sortDir=-1; }
+          render();
+        });
+      });
+    }
+    render();
+  }
+  function fill(id, vals){
+    var el=document.getElementById(id), keep=el.value;
+    while(el.options && el.options.length>1) el.remove(1);
+    vals.forEach(function(v){ var o=document.createElement('option'); o.value=v; o.textContent=v; el.appendChild(o); });
+    if(vals.indexOf(keep)>=0) el.value=keep;
+  }
+  function render(){
+    var q=document.getElementById('q').value.trim().toLowerCase(),
+        k=document.getElementById('fKind').value,
+        dn=document.getElementById('fDone').value,
+        p=document.getElementById('fPri').value,
+        mo=document.getElementById('fMonth').value;
+    var list = T.filter(function(t){
+      if(q && t.n.toLowerCase().indexOf(q)<0) return false;
+      if(k && t.k!==k) return false;
+      if(dn!=='' && String(t.d)!==dn) return false;
+      if(p && t.p!==p) return false;
+      if(mo && t.month!==mo) return false;
+      return true;
+    });
+    list.sort(function(a,b){
+      var x=a[sortKey], y=b[sortKey];
+      if(x==null) x = (sortKey==='lead') ? -1 : '';
+      if(y==null) y = (sortKey==='lead') ? -1 : '';
+      if(x<y) return -1*sortDir; if(x>y) return 1*sortDir; return 0;
+    });
+    document.getElementById('cnt').textContent = list.length + ' / ' + T.length + '건';
+    document.getElementById('tb').innerHTML = list.map(function(t){
+      var late = t.late ? ' style="color:#B4462F;font-weight:700"' : '';
+      return '<tr><td class="nm"><span class="dot '+(t.d?'on':'off')+'"></span>'+
+        '<a href="'+t.url+'" target="_blank" rel="noopener">'+esc(t.n)+'</a></td>'+
+        '<td class="hide-s">'+esc(t.k)+'</td>'+
+        '<td class="hide-s">'+esc(t.p)+'</td>'+
+        '<td class="hide-s">'+esc(t.s)+'</td>'+
+        '<td class="c"'+late+'>'+fmt(t.u)+'</td>'+
+        '<td class="c">'+fmt(t.f)+'</td>'+
+        '<td class="c hide-s">'+(t.lead==null?'—':t.lead)+'</td></tr>';
+    }).join('');
+  }
+
+  /* ================= 아사나 실시간 조회 ================= */
+  var API = 'https://app.asana.com/api/1.0';
+  var PROJECT_GID = '1215323540554407';
+  var SECTIONS = {           /* 이 프로젝트의 보드 섹션 */
+    '1215323542907894':'할 일','1215323542907896':'수행 중','1215323542907898':'대기',
+    '1215323542907900':'완료','1215323542907902':'보류중','1215323542907904':'취소',
+    '1215394141742482':'지속'
+  };
+  var CF = { '1215314210438679':'p', '1215318262228711':'st', '1215314210438664':'b' };
+  var FIELDS = ['name','completed','completed_at','created_at','due_on','num_subtasks',
+    'assignee.name','memberships.section.gid','memberships.section.name',
+    'custom_fields.gid','custom_fields.name','custom_fields.display_value'].join(',');
+  var KEY = 'beoltoon.dash.pat';
+  var tok = null, syncing = false;
+
+  function store(){ try{ return window.localStorage; }catch(e){ return null; } }
+  function loadTok(){ var s=store(); try{ return s ? s.getItem(KEY) : null; }catch(e){ return null; } }
+  function saveTok(v){ var s=store(); try{ if(s) s.setItem(KEY, v); }catch(e){} }
+  function dropTok(){ var s=store(); try{ if(s) s.removeItem(KEY); }catch(e){} }
+
+  function msg(text, cls){
+    var el = document.getElementById('syncMsg');
+    el.className = 'status' + (cls ? ' '+cls : '');
+    el.innerHTML = (cls==='busy' ? '<span class="spin"></span>' : '') + esc(text);
+  }
+  /* 아사나 타임스탬프는 UTC. 한국시간 기준 날짜로 변환한다. */
+  function kst(iso){
+    if(!iso) return null;
+    try{ return new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}); }
+    catch(e){ return iso.slice(0,10); }
+  }
+  function todayKST(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}); }
+
+  function pickSection(ms){
+    if(!ms) return '미분류';
+    for(var i=0;i<ms.length;i++){
+      var s = ms[i] && ms[i].section;
+      if(s && SECTIONS[s.gid]) return SECTIONS[s.gid];
+    }
+    return (ms[0] && ms[0].section && ms[0].section.name) || '미분류';
+  }
+  function pickFields(cfs){
+    var out = {p:'미지정', st:'미지정', b:'미지정'};
+    (cfs||[]).forEach(function(f){
+      var key = CF[f.gid];
+      if(key && f.display_value) out[key] = f.display_value;
+    });
+    return out;
+  }
+  function mapTask(t){
+    var nm = (t.name||'').replace(/\s+/g,' ').trim();
+    var m = nm.match(/^\[([^\]]+)\]\s*(.*)$/);
+    var cf = pickFields(t.custom_fields);
+    return {
+      id: t.gid, n: m ? m[2].trim() : nm, k: m ? m[1].trim() : '기타',
+      d: t.completed ? 1 : 0,
+      c: kst(t.created_at), f: kst(t.completed_at), u: t.due_on || null,
+      s: pickSection(t.memberships), p: cf.p, st: cf.st, b: cf.b,
+      a: (t.assignee && t.assignee.name) || '', sub: t.num_subtasks || 0,
+      url: 'https://app.asana.com/0/0/' + t.gid
+    };
+  }
+
+  function apiGet(path, token){
+    return fetch(API + path, {
+      headers: { 'Authorization':'Bearer ' + token, 'Accept':'application/json' }
+    }).then(function(r){
+      if(r.status === 401) throw new Error('토큰이 유효하지 않거나 만료되었습니다. 다시 발급받아 주세요.');
+      if(r.status === 403) throw new Error('이 프로젝트에 접근할 권한이 없습니다.');
+      if(r.status === 429) throw new Error('아사나 요청 한도에 걸렸습니다. 1분 뒤 다시 시도하세요.');
+      if(!r.ok) throw new Error('아사나 응답 오류 (' + r.status + ')');
+      return r.json();
+    });
+  }
+
+  function fetchAll(token){
+    var acc = [];
+    function page(offset, n){
+      if(n > 25) return Promise.resolve(acc);
+      var p = '/tasks?project=' + PROJECT_GID + '&limit=100&opt_fields=' + encodeURIComponent(FIELDS)
+            + (offset ? '&offset=' + encodeURIComponent(offset) : '');
+      msg('아사나에서 불러오는 중… ' + acc.length + '건', 'busy');
+      return apiGet(p, token).then(function(j){
+        acc = acc.concat(j.data || []);
+        if(j.next_page && j.next_page.offset) return page(j.next_page.offset, n+1);
+        return acc;
+      });
+    }
+    return page(null, 1);
+  }
+
+  function sync(token){
+    if(syncing) return;
+    syncing = true;
+    document.getElementById('btnSync').disabled = true;
+    return fetchAll(token).then(function(raw){
+      var fresh = {
+        snapshot: todayKST(), project: D.project, owner: D.owner,
+        projectUrl: D.projectUrl, tasks: raw.map(mapTask),
+        fetchedAt: new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})
+      };
+      tok = token;
+      boot(fresh);
+      document.getElementById('btnSave').hidden = false;
+      document.getElementById('btnForget').hidden = !loadTok();
+      msg('최신 상태 · ' + fresh.tasks.length + '건 · ' + fresh.fetchedAt + ' 기준', 'ok');
+      hideTok();
+    }).catch(function(e){
+      msg(e && e.message ? e.message : '불러오지 못했습니다. 네트워크를 확인하세요.', 'err');
+      if(/토큰/.test(e && e.message || '')) showTok();
+    }).then(function(){
+      syncing = false;
+      document.getElementById('btnSync').disabled = false;
+    });
+  }
+
+  function showTok(){ document.getElementById('tokbox').hidden = false;
+                      document.getElementById('pat').focus(); }
+  function hideTok(){ document.getElementById('tokbox').hidden = true;
+                      document.getElementById('pat').value = ''; }
+
+  function wireLive(){
+    document.getElementById('btnSync').addEventListener('click', function(){
+      var t = tok || loadTok();
+      if(t) sync(t); else showTok();
+    });
+    document.getElementById('btnConnect').addEventListener('click', function(){
+      var v = document.getElementById('pat').value.trim();
+      if(!v){ msg('토큰을 입력하세요.', 'err'); return; }
+      if(document.getElementById('remember').checked) saveTok(v);
+      sync(v);
+    });
+    document.getElementById('pat').addEventListener('keydown', function(e){
+      if(e.key === 'Enter') document.getElementById('btnConnect').click();
+    });
+    document.getElementById('btnCancel').addEventListener('click', function(){ hideTok(); msg(''); });
+    document.getElementById('btnForget').addEventListener('click', function(){
+      dropTok(); tok = null;
+      document.getElementById('btnForget').hidden = true;
+      msg('저장된 토큰을 지웠습니다.');
+    });
+    document.getElementById('btnSave').addEventListener('click', function(){
+      var out = {snapshot:D.snapshot, project:D.project, owner:D.owner,
+                 projectUrl:D.projectUrl, tasks:D.tasks};
+      var url = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)],
+                {type:'application/json'}));
+      var a = document.createElement('a');
+      a.href = url; a.download = 'data.json'; document.body.appendChild(a);
+      a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    });
+    if(loadTok()) document.getElementById('btnForget').hidden = false;
+  }
+
+  /* ---------- 시작 ---------- */
+  function start(){
+    wireLive();
+    var saved = loadTok();
+    if(saved && window.fetch){ boot(EMB); sync(saved); return; }   /* 저장된 토큰이 있으면 자동 갱신 */
+    if(window.fetch && location.protocol !== 'file:'){
+      fetch('data.json',{cache:'no-store'})
+        .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+        .then(function(j){ boot(j); msg('저장된 스냅샷 · 새로고침하면 아사나에서 실시간으로 가져옵니다.'); })
+        .catch(function(){ boot(EMB); msg('내장 스냅샷 · 새로고침하면 아사나에서 실시간으로 가져옵니다.'); });
+    } else {
+      boot(EMB); msg('내장 스냅샷 · 새로고침하면 아사나에서 실시간으로 가져옵니다.');
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>
