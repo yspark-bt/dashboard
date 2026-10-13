@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개인 업무 현황판 | 벌툰가맹부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF7F2; --line:#DDD3C4; --soft:#EDE6DA; --ink:#2A2520; --mute:#7A7268;
+    --accent:#F29801; --risk:#B4462F; --warn:#8A6A1F; --ok:#4A6B4E; --card:#FDFBF7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg); color:var(--ink);
+    font-family:"Noto Sans KR","맑은 고딕",Malgun Gothic,sans-serif;
+    font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:"Noto Serif KR",serif; font-weight:600; letter-spacing:-.01em; margin:0}
+  a{color:inherit}
+  .num{font-family:Georgia,serif; font-variant-numeric:tabular-nums}
+  .wrap{max-width:1200px; margin:0 auto; padding:0 24px 80px}
+  [hidden]{display:none !important}
+
+  header{border-bottom:.5px solid var(--line); padding:34px 0 20px; margin-bottom:28px}
+  .toprow{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap}
+  .eyebrow{font-size:11.5px; letter-spacing:.18em; color:var(--mute); margin-bottom:8px}
+  h1{font-size:29px; line-height:1.25}
+  .today{font-family:"Noto Serif KR",serif; font-size:15px; color:var(--mute); margin-top:6px}
+  .rule{display:block; width:44px; height:2px; background:var(--accent); margin:12px 0 0}
+  .nav{display:flex; gap:8px}
+  .btn, button{font-family:inherit; font-size:13px; color:var(--ink); background:var(--card);
+    border:.5px solid var(--line); padding:7px 14px; cursor:pointer; border-radius:0; text-decoration:none; display:inline-block}
+  .btn:hover, button:hover{border-color:var(--accent)}
+  button:disabled{opacity:.5; cursor:default}
+  .primary{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+  .primary:hover{background:var(--accent); border-color:var(--accent)}
+  .live{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:16px}
+  .autosync{font-size:12.5px; color:var(--mute); display:flex; align-items:center; gap:6px}
+  select{font-family:inherit; font-size:12.5px; color:var(--ink); background:var(--card);
+    border:.5px solid var(--line); padding:5px 8px; outline:none; border-radius:0}
+  select:focus{border-color:var(--accent)}
+  .status{font-size:12.5px; color:var(--mute)}
+  .status.err{color:var(--risk)} .status.ok{color:var(--ok)}
+  .spin{display:inline-block; width:10px; height:10px; margin-right:6px; vertical-align:-1px;
+    border:1.5px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .lastsync{font-size:11.5px; color:var(--mute)}
+  .lastsync .d{display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ok); margin-right:5px; vertical-align:1px}
+  @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.3}}
+  .lastsync.fresh .d{animation:pulse 1.6s ease-in-out infinite}
+  @media (prefers-reduced-motion:reduce){ .spin,.lastsync.fresh .d{animation:none} }
+
+  .tokbox{border:.5px solid var(--line); background:var(--card); padding:16px 18px; margin-top:14px; max-width:640px}
+  .tokbox h3{font-size:14px; margin-bottom:6px}
+  .tokbox p{font-size:12.5px; color:var(--mute); margin:0 0 12px}
+  .tokbox .r{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+  .tokbox input[type=password]{font-family:Georgia,serif; font-size:13px; flex:1; min-width:240px;
+    border:.5px solid var(--line); background:var(--bg); padding:8px 10px; outline:none}
+  .tokbox input[type=password]:focus{border-color:var(--accent)}
+  .tokbox label{font-size:12px; color:var(--mute); display:flex; align-items:center; gap:5px}
+  .tokbox .warn{font-size:11.5px; color:var(--mute); border-left:2px solid var(--accent); padding-left:10px; margin-top:12px}
+
+  section{margin:0 0 34px}
+  .shead{display:flex; align-items:baseline; justify-content:space-between; gap:16px;
+    border-bottom:.5px solid var(--line); padding-bottom:8px; margin-bottom:14px}
+  .shead h2{font-size:17px}
+  .shead .hint{font-size:12px; color:var(--mute)}
+
+  /* 상단 현황 숫자 */
+  .strip{display:grid; grid-template-columns:repeat(5,1fr); border:.5px solid var(--line); background:var(--card)}
+  .s{padding:16px 18px 14px; border-right:.5px solid var(--line)}
+  .s:last-child{border-right:0}
+  .s .lab{font-size:11.5px; color:var(--mute)}
+  .s .val{font-family:Georgia,serif; font-size:34px; line-height:1.15; margin-top:4px; font-variant-numeric:tabular-nums}
+  .s .sub{font-size:11.5px; color:var(--mute)}
+  .s.hot .val{color:var(--risk)} .s.acc .val{color:var(--accent)} .s.ok .val{color:var(--ok)}
+  .s.zero .val{color:#C9C0B3}
+
+  /* 집중 / 정체 */
+  .two{display:grid; grid-template-columns:1.3fr 1fr; gap:22px}
+  .box{border:.5px solid var(--line); background:var(--card)}
+  .item{display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:.5px solid #F1EADE; text-decoration:none}
+  .item:last-child{border-bottom:0}
+  .item:hover{background:#F5F0E7}
+  .flag{flex:0 0 auto; font-size:10.5px; padding:1px 8px; border-radius:999px; border:.5px solid var(--line); color:var(--mute); white-space:nowrap}
+  .flag.over{color:var(--risk); border-color:#E3C4BC; background:#FBF1EE}
+  .flag.today{color:#A06200; border-color:#F0D3A3; background:#FDF5E8}
+  .flag.doing{color:var(--ink)}
+  .item .t{flex:1; font-size:13.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .item .k{font-size:11px; color:var(--mute); white-space:nowrap}
+  .item .who{font-size:10.5px; color:var(--warn); white-space:nowrap}
+  .item .d{font-family:Georgia,serif; font-size:12px; color:var(--mute); white-space:nowrap; font-variant-numeric:tabular-nums}
+  .empty{padding:22px 14px; text-align:center; font-size:12.5px; color:var(--mute)}
+
+  /* 이번 주 */
+  .week{display:grid; grid-template-columns:repeat(7,1fr); gap:0; border:.5px solid var(--line); background:var(--card)}
+  .day{border-right:.5px solid var(--line); min-height:150px; min-width:0}
+  .day:last-child{border-right:0}
+  .day h4{font-family:"Noto Sans KR",sans-serif; font-weight:500; font-size:12px; color:var(--mute);
+    padding:9px 10px; border-bottom:.5px solid var(--line); display:flex; justify-content:space-between}
+  .day.is-today{background:#FFF9EF}
+  .day.is-today h4{color:var(--ink); border-bottom:2px solid var(--accent)}
+  .day.weekend h4{color:#B0A699}
+  .chip{display:block; margin:6px 8px; padding:5px 7px; font-size:11.5px; line-height:1.4; text-decoration:none;
+    border-left:2px solid var(--ink); background:#fff}
+  .chip:hover{background:#F5F0E7}
+  .chip.over{border-left-color:var(--risk); color:var(--risk)}
+  .chip.hi{border-left-color:var(--accent)}
+  .chip.done{border-left-color:#CFC6B8; color:#A39A8E; text-decoration:line-through}
+
+  /* 보드 */
+  .board{display:grid; gap:10px; align-items:start}
+  .col{border:.5px solid var(--line); background:var(--card); min-width:0}
+  .col h4{font-size:12.5px; padding:9px 11px; border-bottom:.5px solid var(--line); display:flex; justify-content:space-between}
+  .col h4 .n{font-family:Georgia,serif; color:var(--mute)}
+  .col .note{font-size:10.5px; color:var(--mute); padding:5px 11px; border-bottom:.5px solid #F1EADE}
+  .col-list{max-height:420px; overflow-y:auto}
+  .card{display:block; padding:9px 11px; border-bottom:.5px solid #F1EADE; text-decoration:none}
+  .card:last-child{border-bottom:0}
+  .card:hover{background:#F5F0E7}
+  .card .ct{font-size:12.5px; line-height:1.4; margin-bottom:4px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
+  .card .cm{display:flex; justify-content:space-between; font-size:10.5px; color:var(--mute); gap:6px}
+  .cm .over{color:var(--risk); font-weight:700} .cm .soon{color:var(--accent); font-weight:700}
+
+  /* 흐름 */
+  .bars{display:grid; gap:7px; padding:14px 16px}
+  .bar{display:grid; grid-template-columns:70px 1fr 30px; align-items:center; gap:10px; font-size:12px}
+  .bar .track{height:9px; background:#EFE8DC}
+  .bar .fill{height:9px; background:var(--ink)}
+  .bar.cur .fill{background:var(--accent)}
+  .bar .n{text-align:right; font-family:Georgia,serif; color:var(--mute)}
+
+  /* 성과 요약 */
+  .tabs{display:flex; gap:0; border:.5px solid var(--line); background:var(--card)}
+  .tabs button{border:0; border-right:.5px solid var(--line); background:transparent; padding:6px 12px; font-size:12.5px; color:var(--mute)}
+  .tabs button:last-child{border-right:0}
+  .tabs button.on{background:var(--ink); color:var(--bg)}
+  .perf-kpis{display:grid; grid-template-columns:repeat(4,1fr); border:.5px solid var(--line); background:var(--card); margin-bottom:14px}
+  .perf-kpis .s .val{font-size:28px}
+  .delta{font-size:11.5px; margin-left:6px; font-family:Georgia,serif}
+  .delta.up{color:var(--ok)} .delta.down{color:var(--risk)}
+  .summary{border:.5px solid var(--line); border-left:2px solid var(--accent); background:#FFFCF6; padding:14px 18px; margin-bottom:14px}
+  .summary p{margin:0 0 6px; font-size:13.5px; line-height:1.7}
+  .summary p:last-child{margin-bottom:0}
+  .summary b{font-weight:600}
+  .summary .src{font-size:11px; color:var(--mute); margin-top:8px}
+  .cats{padding:14px 16px; display:grid; gap:9px}
+  .cat{display:grid; grid-template-columns:150px 1fr 66px; gap:10px; align-items:center; font-size:12.5px}
+  .cat .nm b{font-weight:500; display:block}
+  .cat .nm small{font-size:10.5px; color:var(--mute)}
+  .cat .track{height:10px; background:#EFE8DC}
+  .cat .fill{display:block; height:10px; background:var(--ink)}
+  .cat.top .fill{background:var(--accent)}
+  .cat .n{text-align:right; font-family:Georgia,serif; color:var(--mute); white-space:nowrap}
+  .perf-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:10px}
+  @media (max-width:980px){ .perf-kpis{grid-template-columns:repeat(2,1fr)} .cat{grid-template-columns:110px 1fr 58px} }
+
+  footer{border-top:.5px solid var(--line); padding-top:14px; font-size:12px; color:var(--mute)}
+  .notice{border-left:2px solid var(--accent); padding:2px 0 2px 12px; margin-top:10px}
+
+  @media (max-width:980px){
+    .strip{grid-template-columns:repeat(3,1fr)}
+    .s:nth-child(3){border-right:0} .s:nth-child(-n+3){border-bottom:.5px solid var(--line)}
+    .two{grid-template-columns:1fr}
+    .week{grid-template-columns:repeat(4,1fr)} .day{border-bottom:.5px solid var(--line)}
+  }
+  @media (max-width:600px){
+    .strip{grid-template-columns:repeat(2,1fr)}
+    .week{grid-template-columns:repeat(2,1fr)}
+    h1{font-size:23px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="toprow">
+    <div>
+      <div class="eyebrow" id="eyebrow">벌툰가맹부 · 개인 업무 현황판</div>
+      <h1 id="title">업무 현황판</h1>
+      <div class="today" id="todayLabel"></div>
+      <span class="rule"></span>
+    </div>
+    <div class="nav">
+      <a class="btn" href="index.html">팀 대시보드</a>
+      <a class="btn" id="asanaLink" href="#" target="_blank" rel="noopener">아사나에서 열기 ↗</a>
+    </div>
+  </div>
+
+  <div class="live">
+    <button class="primary" id="btnSync">새로고침</button>
+    <span class="autosync">자동 새로고침
+      <select id="pollSec">
+        <option value="0">끔</option>
+        <option value="30">30초마다</option>
+        <option value="60" selected>1분마다</option>
+        <option value="180">3분마다</option>
+        <option value="300">5분마다</option>
+      </select>
+    </span>
+    <span class="lastsync" id="lastSync"></span>
+    <button id="btnForget" hidden>토큰 삭제</button>
+    <span class="status" id="syncMsg"></span>
+  </div>
+
+  <div class="tokbox" id="tokbox" hidden>
+    <h3>아사나 연결</h3>
+    <p>본인 계정의 개인 액세스 토큰(PAT)이 필요합니다. 아사나 →
+      <a href="https://app.asana.com/0/my-apps" target="_blank" rel="noopener">개발자 콘솔</a>에서 발급하세요.
+      팀 대시보드에서 이미 연결했다면 같은 토큰을 자동으로 사용합니다.</p>
+    <div class="r">
+      <input type="password" id="pat" placeholder="아사나 개인 액세스 토큰 붙여넣기" autocomplete="off" spellcheck="false">
+      <label><input type="checkbox" id="remember" checked> 이 브라우저에 저장</label>
+      <button class="primary" id="btnConnect">연결</button>
+      <button id="btnCancel">취소</button>
+    </div>
+    <div class="warn">토큰은 비밀번호와 같습니다. 브라우저 안에만 저장되고 아사나 서버로만 직접 요청합니다.
+      신규 토큰은 90일 후 만료되니 그때 다시 넣어주세요.</div>
+  </div>
+</header>
+
+<div id="emptyView" class="box empty" hidden style="padding:30px">
+  <strong>아직 연결되지 않았습니다.</strong><br>
+  위 <strong>새로고침</strong>을 눌러 아사나에 연결하면 지금 업무 상태를 그대로 불러옵니다.
+  이 페이지에는 업무 데이터가 저장되어 있지 않습니다.
+</div>
+
+<div id="boardView" hidden>
+
+  <section>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <section>
+    <div class="two">
+      <div>
+        <div class="shead"><h2>지금 집중할 일</h2><span class="hint">마감 초과 → 오늘 마감 → 수행 중 → 3일 내 마감 순</span></div>
+        <div class="box" id="focus"></div>
+      </div>
+      <div>
+        <div class="shead"><h2>멈춰 있는 일</h2><span class="hint">14일 넘게 변동 없는 미완료 업무</span></div>
+        <div class="box" id="stale"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>이번 주</h2><span class="hint" id="weekHint"></span></div>
+    <div class="week" id="week"></div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>성과 요약</h2>
+      <div class="tabs" id="perfTabs">
+        <button data-p="week">이번 주</button><button data-p="month">이번 달</button>
+        <button data-p="lastmonth">지난달</button><button data-p="d90">최근 90일</button><button data-p="all">전체</button>
+      </div>
+    </div>
+    <div class="perf-kpis" id="perfKpis"></div>
+    <div class="summary" id="perfSummary"></div>
+    <div class="two">
+      <div>
+        <div class="shead"><h2 style="font-size:15px">영역별 완료</h2><span class="hint" id="perfRange"></span></div>
+        <div class="box"><div class="cats" id="perfCats"></div></div>
+      </div>
+      <div>
+        <div class="shead"><h2 style="font-size:15px">주요 결과물</h2><span class="hint">기획·제도·보고·시스템 등 산출물 성격의 완료 업무</span></div>
+        <div class="box" id="perfDeliv"></div>
+      </div>
+    </div>
+    <div class="perf-actions"><button id="btnCopyPerf">요약 텍스트 복사</button></div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>업무 보드</h2><span class="hint">아사나 보드 섹션 그대로 · 완료는 최근 14일만 표시</span></div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section>
+    <div class="two">
+      <div>
+        <div class="shead"><h2>처리 흐름</h2><span class="hint">최근 8주 · 주별 완료 건수</span></div>
+        <div class="box"><div class="bars" id="flow"></div></div>
+      </div>
+      <div>
+        <div class="shead"><h2>이번 주 완료</h2><span class="hint" id="doneHint"></span></div>
+        <div class="box" id="doneList"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  아사나 업무 보드를 실시간으로 읽어오는 현황판입니다. 아사나에서 업무를 등록·완료하면 자동 새로고침 주기마다,
+  또는 이 탭으로 돌아오는 순간 반영됩니다. 카드를 누르면 아사나 해당 업무로 이동합니다.
+  <div class="notice">이 파일에는 업무 데이터가 없습니다. 내용은 연결한 사람의 토큰으로 그 사람 브라우저 안에서만 조회됩니다.</div>
+</footer>
+
+</div>
+
+<script id="people" type="application/json">[{"label": "박용성", "role": "", "gid": "1215323540554407", "sections": {"1215323542907894": "할 일", "1215323542907896": "수행 중", "1215323542907898": "대기", "1215323542907900": "완료", "1215323542907902": "보류중", "1215323542907904": "취소", "1215394141742482": "지속"}, "cf": {"1215314210438679": "p", "1215318262228711": "st", "1215314210438664": "b"}}, {"label": "한승혁", "role": "본부장", "gid": "1215613571562684", "sections": {"1215616745551192": "할 일", "1215616745551194": "수행 중", "1215616745551198": "완료", "1215616745551196": "대기", "1215616641971783": "보류중", "1215616641971785": "취소"}, "cf": {"1215616753444481": "p", "1215616753444494": "st", "1215616745551177": "b"}}, {"label": "유창윤", "role": "팀장", "gid": "1215320557910081", "sections": {"1215311490010182": "할 일", "1215320559277596": "수행 중", "1215320559277598": "대기", "1215320559277600": "완료", "1215320559277602": "보류중", "1215320559277604": "취소"}, "cf": {"1215311490010169": "p", "1215311490002749": "st", "1215311490010154": "b"}}, {"label": "최슬기", "role": "대리", "gid": "1215320542797396", "sections": {"1215314987672541": "할 일", "1215314987672543": "수행 중", "1215314987672545": "대기", "1215314987672547": "완료", "1215314987672549": "보류중", "1215314987672551": "취소"}, "cf": {"1215314252728464": "p", "1215314252728436": "st", "1215314252728449": "b"}}, {"label": "박민호", "role": "주임", "gid": "1215320598596473", "sections": {"1215320598935486": "할 일", "1215320598935488": "수행 중", "1215320598935490": "대기", "1215314252750419": "완료", "1215314252750421": "보류중", "1215314252750423": "취소"}, "cf": {"1215320598935473": "p", "1215320598935349": "st", "1215320598935362": "b"}}, {"label": "한지민", "role": "사원", "gid": "1215323579538816", "sections": {"1215314252674857": "할 일", "1215314252674859": "수행 중", "1215314252674861": "대기", "1215314252674863": "완료", "1215314252674865": "보류중", "1215314252674867": "취소"}, "cf": {"1215314252674844": "p", "1215314987598700": "st", "1215314252674829": "b"}}]</script>
+<script>
+(function(){
+  "use strict";
+  var PEOPLE = JSON.parse(document.getElementById('people').textContent);
+  var API = 'https://app.asana.com/api/1.0';
+  var FIELDS = ['name','completed','completed_at','created_at','modified_at','due_on','num_subtasks',
+    'assignee.name','memberships.section.gid','memberships.section.name',
+    'custom_fields.gid','custom_fields.display_value'].join(',');
+  /* 팀 대시보드와 같은 키를 써서 토큰·주기 설정을 공유한다 */
+  var KEY = 'beoltoon.dash.pat.team', OLDKEY = 'beoltoon.dash.pat', POLL_KEY = 'beoltoon.dash.pollsec';
+  var ORDER = ['할 일','수행 중','대기','완료','보류중','취소','지속'];
+  var DOW = ['일','월','화','수','목','금','토'];
+
+  function param(name){
+    var m = new RegExp('[?&]'+name+'=([^&]*)').exec(location.search || '');
+    return m ? decodeURIComponent(m[1].replace(/\+/g,' ')) : null;
+  }
+  var WHO = param('who') || '박용성';
+  var ME = PEOPLE.filter(function(p){return p.label===WHO;})[0] || PEOPLE[0];
+
+  var T = [], tok = null, syncing = false, pollTimer = null, lastSyncAt = null, TODAY = null;
+
+  /* ---------- 유틸 ---------- */
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function pad(n){ return n<10?'0'+n:''+n; }
+  function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function toDate(s){ if(!s) return null; var p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+  function days(a,b){ return Math.round((b-a)/86400000); }
+  function addDays(d,n){ var x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  function md(d){ return (d.getMonth()+1)+'/'+d.getDate(); }
+  function kst(iso){
+    if(!iso) return null;
+    try{ return new Date(iso).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}); }
+    catch(e){ return iso.slice(0,10); }
+  }
+  function todayKST(){ return toDate(new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'})); }
+  function store(){ try{ return window.localStorage; }catch(e){ return null; } }
+  function sget(k){ var s=store(); try{ return s?s.getItem(k):null; }catch(e){ return null; } }
+  function sset(k,v){ var s=store(); try{ if(s) s.setItem(k,v); }catch(e){} }
+  function sdel(k){ var s=store(); try{ if(s) s.removeItem(k); }catch(e){} }
+  function loadTok(){ return sget(KEY) || sget(OLDKEY); }
+  function msg(text, cls){
+    var el=$('syncMsg'); el.className='status'+(cls?' '+cls:'');
+    el.innerHTML=(cls==='busy'?'<span class="spin"></span>':'')+esc(text);
+  }
+  function ddayOf(t){
+    if(t.dday==null) return {txt:'마감 미정', cls:''};
+    if(t.dday<0) return {txt:'D+'+(-t.dday), cls:'over'};
+    if(t.dday===0) return {txt:'오늘', cls:'soon'};
+    return {txt:'D-'+t.dday, cls: t.dday<=3?'soon':''};
+  }
+  function notMine(t){ return t.who && t.who !== ME.label ? '<span class="who">담당 '+esc(t.who)+'</span>' : ''; }
+
+  /* ---------- 데이터 ---------- */
+  function mapTask(t){
+    var nm=(t.name||'').replace(/\s+/g,' ').trim(), m=nm.match(/^\[([^\]]+)\]\s*(.*)$/);
+    var cf={p:'미지정', st:'미지정'};
+    (t.custom_fields||[]).forEach(function(f){ var k=ME.cf[f.gid]; if(k && f.display_value) cf[k]=f.display_value; });
+    var sec='미분류';
+    (t.memberships||[]).some(function(x){ if(x.section && ME.sections[x.section.gid]){ sec=ME.sections[x.section.gid]; return true; } return false; });
+    return { id:t.gid, n: m?m[2].trim():nm, k: m?m[1].trim():'기타', d: t.completed?1:0,
+      c: kst(t.created_at), f: kst(t.completed_at), mo: kst(t.modified_at), u: t.due_on||null,
+      s: sec, p: cf.p, st: cf.st, who: (t.assignee&&t.assignee.name)||'', sub: t.num_subtasks||0,
+      url: 'https://app.asana.com/0/'+ME.gid+'/'+t.gid };
+  }
+  function apiGet(path, token){
+    return fetch(API+path,{headers:{'Authorization':'Bearer '+token,'Accept':'application/json'}})
+      .then(function(r){
+        if(r.status===401){ var e=new Error('토큰이 유효하지 않거나 만료되었습니다. 다시 발급받아 주세요.'); e.code=401; throw e; }
+        if(r.status===403){ var e2=new Error('이 업무 보드를 볼 권한이 없습니다.'); e2.code=403; throw e2; }
+        if(r.status===429){ var e3=new Error('아사나 요청 한도에 걸렸습니다. 잠시 뒤 다시 시도하세요.'); e3.code=429; throw e3; }
+        if(!r.ok){ var e4=new Error('아사나 응답 오류 ('+r.status+')'); e4.code=r.status; throw e4; }
+        return r.json();
+      });
+  }
+  function fetchAll(token){
+    var acc=[];
+    function page(offset,n){
+      if(n>25) return Promise.resolve(acc);
+      var p='/tasks?project='+ME.gid+'&limit=100&opt_fields='+encodeURIComponent(FIELDS)+(offset?'&offset='+encodeURIComponent(offset):'');
+      return apiGet(p,token).then(function(j){
+        acc=acc.concat((j.data||[]).map(mapTask));
+        if(!lastSyncAt) msg('아사나에서 불러오는 중… '+acc.length+'건','busy');
+        if(j.next_page && j.next_page.offset) return page(j.next_page.offset,n+1);
+        return acc;
+      });
+    }
+    return page(null,1);
+  }
+
+  /* ---------- 렌더 ---------- */
+  function prepare(){
+    TODAY = todayKST();
+    T.forEach(function(t){
+      t.dueD=toDate(t.u); t.finD=toDate(t.f); t.modD=toDate(t.mo);
+      t.dday = t.dueD ? days(TODAY,t.dueD) : null;
+      t.late = !t.d && t.dueD && t.dday<0;
+      t.idle = t.modD ? days(t.modD,TODAY) : null;
+      t.col = t.s==='취소' ? '취소' : (t.d ? '완료' : t.s);
+    });
+  }
+  function render(){
+    prepare();
+    $('emptyView').hidden = true; $('boardView').hidden = false;
+    var dow = TODAY.getDay(), mon = addDays(TODAY, -((dow+6)%7)), sun = addDays(mon,6);
+    $('todayLabel').textContent = (TODAY.getMonth()+1)+'월 '+TODAY.getDate()+'일 '+DOW[dow]+'요일';
+
+    var open = T.filter(function(t){return !t.d && t.col!=='취소';});
+    /* 보류중은 일부러 멈춘 일이라 긴급 집계에서 제외 (보드·정체 목록에는 표시) */
+    var active = open.filter(function(t){return t.col!=='보류중';});
+    var late = active.filter(function(t){return t.late;});
+    var today = active.filter(function(t){return t.dday===0;});
+    var week = active.filter(function(t){return t.dueD && t.dueD>=TODAY && t.dueD<=sun;});
+    var doneWeek = T.filter(function(t){return t.d && t.finD && t.finD>=mon;});
+    strip(late, today, week, open, doneWeek, sun);
+    focus(active);
+    stale(open);
+    weekView(mon);
+    board();
+    flow(mon);
+    doneList(doneWeek);
+    perf();
+  }
+
+  function strip(late, today, week, open, doneWeek, sun){
+    var S=[
+      ['마감 초과', late.length, late.length?'바로 처리 필요':'없음', late.length?'hot':'zero'],
+      ['오늘 마감', today.length, today.length?'오늘 안에':'없음', today.length?'acc':'zero'],
+      ['이번 주 마감', week.length, md(sun)+'까지 남은 일', week.length?'':'zero'],
+      ['진행 중', open.length, '미완료 전체', open.length?'':'zero'],
+      ['이번 주 완료', doneWeek.length, '월요일부터', doneWeek.length?'ok':'zero']
+    ];
+    $('strip').innerHTML = S.map(function(s){
+      return '<div class="s '+s[3]+'"><div class="lab">'+s[0]+'</div><div class="val">'+s[1]+'</div><div class="sub">'+esc(s[2])+'</div></div>';
+    }).join('');
+  }
+
+  function focus(open){
+    var pr={'높음':0,'중간':1,'낮음':2};
+    var list = open.map(function(t){
+      var r = t.late?0 : t.dday===0?1 : t.col==='수행 중'?2 : (t.dday!=null && t.dday<=3)?3 : null;
+      return r==null?null:{t:t,r:r};
+    }).filter(Boolean).sort(function(a,b){
+      if(a.r!==b.r) return a.r-b.r;
+      var pa=pr[a.t.p]!=null?pr[a.t.p]:3, pb=pr[b.t.p]!=null?pr[b.t.p]:3;
+      if(pa!==pb) return pa-pb;
+      return (a.t.dday==null?999:a.t.dday)-(b.t.dday==null?999:b.t.dday);
+    }).slice(0,12);
+    var LBL=['마감 초과','오늘 마감','수행 중','곧 마감'], CLS=['over','today','doing',''];
+    $('focus').innerHTML = list.length ? list.map(function(x){
+      var t=x.t, dd=ddayOf(t);
+      return '<a class="item" href="'+t.url+'" target="_blank" rel="noopener" title="'+esc(t.n)+'">'+
+        '<span class="flag '+CLS[x.r]+'">'+LBL[x.r]+'</span>'+
+        '<span class="t">'+esc(t.n)+'</span>'+notMine(t)+
+        '<span class="k">'+esc(t.k)+'</span><span class="d">'+dd.txt+'</span></a>';
+    }).join('') : '<div class="empty">급한 일이 없습니다. 보드에서 다음 할 일을 골라보세요.</div>';
+  }
+
+  function stale(open){
+    var list = open.filter(function(t){ return t.col!=='지속' && t.idle!=null && t.idle>14; })
+      .sort(function(a,b){return b.idle-a.idle;}).slice(0,8);
+    $('stale').innerHTML = list.length ? list.map(function(t){
+      return '<a class="item" href="'+t.url+'" target="_blank" rel="noopener" title="'+esc(t.n)+'">'+
+        '<span class="flag">'+esc(t.col)+'</span><span class="t">'+esc(t.n)+'</span>'+notMine(t)+
+        '<span class="d">'+t.idle+'일째</span></a>';
+    }).join('') : '<div class="empty">오래 묵힌 업무가 없습니다.</div>';
+  }
+
+  function weekView(mon){
+    var cols=[];
+    for(var i=0;i<7;i++){
+      var d=addDays(mon,i), key=ymd(d), isT = key===ymd(TODAY);
+      var items = T.filter(function(t){ return t.u===key && t.col!=='취소'; })
+        .sort(function(a,b){ return a.d-b.d; });
+      var chips = items.map(function(t){
+        var cls = t.d ? 'done' : (t.late ? 'over' : (t.p==='높음' ? 'hi' : ''));
+        return '<a class="chip '+cls+'" href="'+t.url+'" target="_blank" rel="noopener" title="'+esc(t.n)+'">'+esc(t.n)+'</a>';
+      }).join('');
+      cols.push('<div class="day'+(isT?' is-today':'')+(i>=5?' weekend':'')+'"><h4><span>'+DOW[d.getDay()]+' '+md(d)+
+        (isT?' · 오늘':'')+'</span><span class="num">'+(items.length||'')+'</span></h4>'+chips+'</div>');
+    }
+    $('week').innerHTML = cols.join('');
+    var nodue = T.filter(function(t){return !t.d && t.col!=='취소' && t.col!=='지속' && !t.u;}).length;
+    $('weekHint').textContent = md(mon)+' – '+md(addDays(mon,6))+' 마감 기준'+(nodue?' · 마감일 없는 미완료 '+nodue+'건은 보드에서 확인':'');
+  }
+
+  function board(){
+    var secs = []; for(var k in ME.sections){ if(secs.indexOf(ME.sections[k])<0) secs.push(ME.sections[k]); }
+    var cols = ORDER.filter(function(c){ return secs.indexOf(c)>=0; });
+    var cut = addDays(TODAY,-14);
+    $('board').style.gridTemplateColumns = 'repeat('+cols.length+', minmax(0,1fr))';
+    $('board').innerHTML = cols.map(function(c){
+      var all = T.filter(function(t){return t.col===c;});
+      var shown = all, note='';
+      if(c==='완료'){
+        shown = all.filter(function(t){return t.finD && t.finD>=cut;}).sort(function(a,b){return b.finD-a.finD;});
+        note = '<div class="note">최근 14일 '+shown.length+'건 / 누적 '+all.length+'건</div>';
+      } else if(c==='취소'){
+        shown = all.slice(0,30);
+      } else {
+        shown = all.slice().sort(function(a,b){return (a.dday==null?999:a.dday)-(b.dday==null?999:b.dday);});
+      }
+      var cards = shown.map(function(t){
+        var right = c==='완료' ? (t.f?t.f.slice(5).replace('-','.'):'') : ddayOf(t).txt;
+        var rc = c==='완료' ? '' : ddayOf(t).cls;
+        return '<a class="card" href="'+t.url+'" target="_blank" rel="noopener"><div class="ct">'+esc(t.n)+'</div>'+
+          '<div class="cm"><span>'+esc(t.k)+(t.who && t.who!==ME.label?' · '+esc(t.who):'')+'</span><span class="'+rc+'">'+right+'</span></div></a>';
+      }).join('');
+      return '<div class="col"><h4>'+c+'<span class="n">'+all.length+'</span></h4>'+note+
+        '<div class="col-list">'+(cards||'<div class="empty">없음</div>')+'</div></div>';
+    }).join('');
+  }
+
+  function flow(mon){
+    var rows=[];
+    for(var i=7;i>=0;i--){
+      var s=addDays(mon,-7*i), e=addDays(s,7);
+      var n=T.filter(function(t){return t.d && t.finD && t.finD>=s && t.finD<e;}).length;
+      rows.push({lab: md(s)+' 주', n:n, cur: i===0});
+    }
+    var max=Math.max.apply(null, rows.map(function(r){return r.n;}).concat([1]));
+    $('flow').innerHTML = rows.map(function(r){
+      return '<div class="bar'+(r.cur?' cur':'')+'"><span>'+r.lab+(r.cur?' (이번)':'')+'</span><span class="track"><span class="fill" style="display:block;width:'+
+        (r.n/max*100)+'%"></span></span><span class="n">'+r.n+'</span></div>';
+    }).join('');
+  }
+
+  function doneList(list){
+    list = list.slice().sort(function(a,b){return b.finD-a.finD;});
+    $('doneHint').textContent = list.length+'건';
+    $('doneList').innerHTML = list.length ? list.slice(0,12).map(function(t){
+      return '<a class="item" href="'+t.url+'" target="_blank" rel="noopener" title="'+esc(t.n)+'">'+
+        '<span class="k">'+esc(t.k)+'</span><span class="t">'+esc(t.n)+'</span>'+
+        '<span class="d">'+t.f.slice(5).replace('-','.')+'</span></a>';
+    }).join('') + (list.length>12?'<div class="empty" style="padding:10px">외 '+(list.length-12)+'건</div>':'')
+    : '<div class="empty">이번 주 완료한 업무가 아직 없습니다.</div>';
+  }
+
+  /* ---------- 성과 분석 ----------
+     업무명 키워드로 성과 영역을 분류한다. 위에서부터 먼저 맞는 규칙을 적용. */
+  var RULES = [
+    ['출점 지원',      function(t){ return /점포\s*(평가|심사)/.test(t.n); }],
+    ['가맹 영업',      function(t){ return /고객/.test(t.n) || (t.k==='영업' && /상담|통화|미팅|설명회/.test(t.n)); }],
+    ['회의·교육',      function(t){ return /교육|시청/.test(t.n); }],
+    ['시스템·자동화',  function(t){ return /상권분석기|바이브코딩|사이트|위젯|자동화|API|클로드|대시보드|아잔틱|에이전트|테스트|v\d/i.test(t.n); }],
+    ['상권 분석',      function(t){ return /상권\s*분석/.test(t.n); }],
+    ['채용',          function(t){ return /면접|이력서|채용/.test(t.n); }],
+    ['보고',          function(t){ return /보고|브리핑/.test(t.n); }],
+    ['기획·제도',      function(t){ return t.k==='정책/제도' || /기획|매뉴얼|개정|수립|가이드|제안서|R&R|OKR|프로모션|요금제|전략|정보공개서|자료\s*제작|성공사례|리포트|홍보물/.test(t.n); }],
+    ['회의·교육',      function(t){ return /회의|미팅|참석|설명회|교육/.test(t.n); }],
+    ['매장 운영 지원',  function(t){ return /매장|지원|재고|디스펜서|외근|방문|정산|매출|도입/.test(t.n) || t.k==='매장관리' || t.k==='외근'; }]
+  ];
+  var CATDESC = {
+    '출점 지원':'점포 평가·심사', '가맹 영업':'예비 점주 상담·미팅', '시스템·자동화':'상권분석기·업무 도구 개발',
+    '상권 분석':'후보지 상권 분석', '채용':'SV 채용·면접', '보고':'경영진·회장님 보고', '기획·제도':'기획서·정책·제도',
+    '회의·교육':'내부 회의·교육', '매장 운영 지원':'매장 이슈·운영 지원', '기타':'분류되지 않은 업무'
+  };
+  var DELIV = {'시스템·자동화':1, '기획·제도':1, '보고':1};
+  function catOf(t){
+    for(var i=0;i<RULES.length;i++){ if(RULES[i][1](t)) return RULES[i][0]; }
+    return '기타';
+  }
+  var PERF_KEY = 'beoltoon.me.perfperiod', PERIOD = sget(PERF_KEY) || 'month', LAST_PERF = null;
+  var PLABEL = {week:'이번 주', month:'이번 달', lastmonth:'지난달', d90:'최근 90일', all:'전체 기간'};
+
+  function windowOf(p){
+    var Y=TODAY.getFullYear(), M=TODAY.getMonth(), D=TODAY.getDate(), mon=addDays(TODAY,-((TODAY.getDay()+6)%7));
+    function lastDay(y,m){ return new Date(y,m+1,0).getDate(); }
+    if(p==='week')  return {s:mon, e:TODAY, ps:addDays(mon,-7), pe:addDays(TODAY,-7), prevLabel:'지난주 같은 기간'};
+    if(p==='month') return {s:new Date(Y,M,1), e:TODAY, ps:new Date(Y,M-1,1), pe:new Date(Y,M-1,Math.min(D,lastDay(Y,M-1))), prevLabel:'지난달 같은 기간'};
+    if(p==='lastmonth') return {s:new Date(Y,M-1,1), e:new Date(Y,M,0), ps:new Date(Y,M-2,1), pe:new Date(Y,M-1,0), prevLabel:'그 전달'};
+    if(p==='d90')   return {s:addDays(TODAY,-89), e:TODAY, ps:addDays(TODAY,-179), pe:addDays(TODAY,-90), prevLabel:'직전 90일'};
+    return {s:null, e:TODAY, ps:null, pe:null, prevLabel:''};
+  }
+  function inWin(t,s,e){ return t.d && t.finD && (!s || t.finD>=s) && t.finD<=e && t.col!=='취소'; }
+  function fmtRange(w){
+    if(!w.s){
+      var f = T.filter(function(t){return t.d && t.finD;}).map(function(t){return t.finD;}).sort(function(a,b){return a-b;})[0];
+      return f ? md(f)+' – '+md(w.e) : '';
+    }
+    return md(w.s)+' – '+md(w.e);
+  }
+  /* 끝 글자 받침에 맞춰 조사를 붙인다 (을/를, 이/가, 은/는) */
+  function josa(w, a, b){
+    var s = String(w).replace(/<[^>]+>/g,'').replace(/[\s)\]…\.%]+$/,''), c = s.charCodeAt(s.length-1);
+    var has;
+    if(c>=0xAC00 && c<=0xD7A3) has = (c-0xAC00)%28 > 0;
+    else if(/[0-9]$/.test(s)) has = '013678'.indexOf(s.slice(-1)) >= 0;
+    else has = false;
+    return w + (has ? a : b);
+  }
+  /* 끝의 (참석/11시 등) 부가설명은 떼되, (v9.8)·(2차) 같은 구분 정보는 남긴다 */
+  function shortName(t){
+    var n = t.n.replace(/\s*\((?![^)]*(v\d|\d+차))[^)]*\)\s*$/,'');
+    return n.length>20 ? n.slice(0,20)+'…' : n;
+  }
+  function uniq(arr){ var seen={}; return arr.filter(function(x){ if(seen[x]) return false; seen[x]=1; return true; }); }
+  function examples(list, cat){
+    var out=[], seen={};
+    list.slice().sort(function(a,b){return b.finD-a.finD;}).forEach(function(t){
+      if(out.length>=3) return;
+      var x;
+      if(cat==='출점 지원'){ var m=t.n.match(/([^\s\]]+?점\d?)\s*점포/); x = m ? m[1] : shortName(t); }
+      else x = shortName(t);
+      if(!seen[x]){ seen[x]=1; out.push(x); }
+    });
+    return out;
+  }
+
+  function perf(){
+    var w = windowOf(PERIOD);
+    var cur = T.filter(function(t){ return inWin(t,w.s,w.e); });
+    var prev = w.ps ? T.filter(function(t){ return inWin(t,w.ps,w.pe); }) : null;
+    cur.forEach(function(t){ t.cat = catOf(t); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('#perfTabs button'), function(b){
+      b.className = b.getAttribute('data-p')===PERIOD ? 'on' : '';
+    });
+    $('perfRange').textContent = fmtRange(w);
+
+    /* 지표 */
+    var withDue = cur.filter(function(t){return t.dueD;});
+    var keep = withDue.filter(function(t){ return days(t.dueD,t.finD)<=1; }).length;
+    var leads = cur.map(function(t){ var c=toDate(t.c); return c ? days(c,t.finD) : null; }).filter(function(v){return v!=null && v>=0;});
+    var avg = leads.length ? leads.reduce(function(a,b){return a+b;},0)/leads.length : null;
+    var high = cur.filter(function(t){return t.p==='높음';}).length;
+    var delta = prev ? cur.length - prev.length : null;
+    var dHtml = delta==null ? '' : '<span class="delta '+(delta>0?'up':delta<0?'down':'')+'">'+(delta>0?'+':'')+delta+'</span>';
+    var K = [
+      ['완료', cur.length+dHtml, prev ? w.prevLabel+' '+prev.length+'건' : '누적'],
+      ['마감 준수율', withDue.length ? Math.round(keep/withDue.length*100)+'%' : '—', '익일 처리 포함 · 마감일 있는 '+withDue.length+'건 기준'],
+      ['평균 처리', avg==null ? '—' : avg.toFixed(1)+'<span style="font-size:15px">일</span>', '등록 → 완료'],
+      ['우선순위 높음', high, '완료 건수']
+    ];
+    $('perfKpis').innerHTML = K.map(function(k){
+      return '<div class="s"><div class="lab">'+k[0]+'</div><div class="val">'+k[1]+'</div><div class="sub">'+esc(k[2])+'</div></div>';
+    }).join('');
+
+    /* 영역별 */
+    var by = {}; cur.forEach(function(t){ (by[t.cat]=by[t.cat]||[]).push(t); });
+    var cats = Object.keys(by).map(function(k){return {k:k, list:by[k], n:by[k].length};})
+      .sort(function(a,b){ return (a.k==='기타')-(b.k==='기타') || b.n-a.n; });
+    var max = cats.length ? Math.max.apply(null, cats.map(function(c){return c.n;})) : 1;
+    $('perfCats').innerHTML = cats.length ? cats.map(function(c,i){
+      return '<div class="cat'+(i===0?' top':'')+'"><span class="nm"><b>'+esc(c.k)+'</b><small>'+esc(CATDESC[c.k]||'')+'</small></span>'+
+        '<span class="track"><span class="fill" style="width:'+(c.n/max*100)+'%"></span></span>'+
+        '<span class="n">'+c.n+'건 · '+Math.round(c.n/cur.length*100)+'%</span></div>';
+    }).join('') : '<div class="empty">이 기간에 완료한 업무가 없습니다.</div>';
+
+    /* 주요 결과물 */
+    var deliv = cur.filter(function(t){ return DELIV[t.cat] || (t.k==='프로젝트' && t.cat!=='회의·교육' && t.cat!=='가맹 영업' && t.cat!=='출점 지원'); })
+      .sort(function(a,b){ return b.finD-a.finD; });
+    $('perfDeliv').innerHTML = deliv.length ? deliv.slice(0,10).map(function(t){
+      return '<a class="item" href="'+t.url+'" target="_blank" rel="noopener" title="'+esc(t.n)+'">'+
+        '<span class="flag">'+esc(t.cat)+'</span><span class="t">'+esc(t.n)+'</span>'+
+        '<span class="d">'+t.f.slice(5).replace('-','.')+'</span></a>';
+    }).join('') + (deliv.length>10 ? '<div class="empty" style="padding:9px">외 '+(deliv.length-10)+'건</div>' : '')
+      : '<div class="empty">이 기간에 산출물 성격의 완료 업무가 없습니다.</div>';
+
+    /* 요약 문장 */
+    var lines = [], plain = [];
+    var label = PLABEL[PERIOD];
+    if(!cur.length){
+      lines.push(label+' 완료한 업무가 아직 없습니다.');
+    } else {
+      var l1 = label+' 업무 <b>'+cur.length+'건</b>을 완료했습니다';
+      if(prev) l1 += ' ('+w.prevLabel+' '+prev.length+'건 대비 '+(delta>=0?'+':'')+delta+'건)';
+      l1 += '.';
+      if(withDue.length) l1 += ' 마감일이 있는 업무의 <b>'+Math.round(keep/withDue.length*100)+'%</b>를 기한 내(익일 처리 포함) 마쳤고';
+      if(avg!=null) l1 += (withDue.length?', ':' ')+'등록부터 완료까지 평균 <b>'+avg.toFixed(1)+'일</b>이 걸렸습니다.';
+      else if(withDue.length) l1 += '습니다.';
+      lines.push(l1);
+      var main = cats.filter(function(c){return c.k!=='기타';});
+      if(main.length && (main.length===1 || main[0].n > main[1].n)){
+        var ex = examples(main[0].list, main[0].k);
+        var head = '가장 큰 비중은 <b>'+esc(main[0].k)+'('+main[0].n+'건, '+Math.round(main[0].n/cur.length*100)+'%)</b>';
+        if(ex.length){
+          var more = main[0].n > ex.length;
+          var tail = more ? ex.map(esc).join(', ')+' 등을' : josa(ex.map(esc).join(', '),'을','를');
+          lines.push(head+'이며, '+tail+' 처리했습니다.');
+        } else lines.push(head+'입니다.');
+        if(main.length>1){
+          var rest = main.slice(1,4).map(function(c){ return esc(c.k)+' '+c.n+'건'; }).join(', ');
+          lines.push(rest+'이 뒤를 이었습니다.');
+        }
+      } else if(main.length){
+        var top = main[0].n;
+        var tied = main.filter(function(c){return c.n===top;});
+        lines.push('업무가 여러 영역에 고르게 나뉘었습니다 — '+
+          tied.slice(0,5).map(function(c){return esc(c.k);}).join(', ')+(tied.length>5?' 등':'')+' 각 '+top+'건.');
+      }
+      if(deliv.length){
+        var dn = uniq(deliv.map(shortName));
+        var shown = dn.slice(0,3).map(function(x){return '<b>'+esc(x)+'</b>';}).join(', ');
+        lines.push('산출물로는 '+(deliv.length>3 ? shown+' 등 '+deliv.length+'건을' : josa(shown,'을','를'))+' 마무리했습니다.');
+      }
+      if(high) lines.push('우선순위 <b>높음</b> 업무는 '+high+'건 완료했습니다.');
+    }
+    $('perfSummary').innerHTML = lines.map(function(l){return '<p>'+l+'</p>';}).join('') +
+      '<div class="src">업무명 키워드 기준 자동 분류 · 완료일(한국시간) 기준 · 취소 업무 제외</div>';
+
+    plain.push('['+ME.label+' 업무 성과 요약 · '+label+' '+fmtRange(w)+']');
+    lines.forEach(function(l){ plain.push('- '+l.replace(/<[^>]+>/g,'')); });
+    if(cats.length){ plain.push(''); plain.push('영역별: '+cats.map(function(c){return c.k+' '+c.n;}).join(' / ')); }
+    if(deliv.length){ plain.push(''); plain.push('주요 결과물:'); deliv.slice(0,10).forEach(function(t){ plain.push('- '+t.n+' ('+t.f.slice(5).replace('-','.')+')'); }); }
+    LAST_PERF = plain.join('\n');
+  }
+
+  function copyText(text){
+    function fallback(){
+      var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta); return ok;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text).then(function(){return true;}, function(){ return fallback(); });
+    }
+    return Promise.resolve(fallback());
+  }
+
+  /* ---------- 동기화 ---------- */
+  function sync(token){
+    if(syncing) return;
+    syncing=true; $('btnSync').disabled=true;
+    if(!lastSyncAt) msg('아사나에서 불러오는 중…','busy');
+    fetchAll(token).then(function(list){
+      T=list; tok=token; render();
+      lastSyncAt=Date.now(); tick(); resetPoll();
+      msg('최신 상태 · '+T.length+'건','ok');
+      $('tokbox').hidden=true; $('pat').value='';
+      $('btnForget').hidden = !loadTok();
+    }).catch(function(e){
+      msg(e&&e.message?e.message:'불러오지 못했습니다. 네트워크를 확인하세요.','err');
+      if(e&&e.code===401){ $('tokbox').hidden=false; }
+    }).then(function(){ syncing=false; $('btnSync').disabled=false; });
+  }
+  function resetPoll(){
+    if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+    var sec=parseInt($('pollSec').value,10); if(isNaN(sec)) sec=60;
+    if(sec>0 && (tok||loadTok())){
+      pollTimer=setInterval(function(){
+        if(document.visibilityState!=='hidden'){ var t=tok||loadTok(); if(t) sync(t); }
+      }, sec*1000);
+    }
+  }
+  function tick(){
+    var el=$('lastSync');
+    if(!lastSyncAt){ el.innerHTML=''; return; }
+    var s=Math.floor((Date.now()-lastSyncAt)/1000);
+    el.className='lastsync'+(s<5?' fresh':'');
+    el.innerHTML='<span class="d"></span>'+(s<5?'방금 갱신':s<60?s+'초 전 갱신':Math.floor(s/60)+'분 전 갱신');
+  }
+
+  function wire(){
+    $('btnSync').addEventListener('click', function(){ var t=tok||loadTok(); if(t) sync(t); else { $('tokbox').hidden=false; $('pat').focus(); } });
+    $('btnConnect').addEventListener('click', function(){
+      var v=$('pat').value.trim(); if(!v){ msg('토큰을 입력하세요.','err'); return; }
+      if($('remember').checked) sset(KEY,v);
+      sync(v);
+    });
+    $('pat').addEventListener('keydown', function(e){ if(e.key==='Enter') $('btnConnect').click(); });
+    $('btnCancel').addEventListener('click', function(){ $('tokbox').hidden=true; $('pat').value=''; msg(''); });
+    $('btnForget').addEventListener('click', function(){
+      sdel(KEY); sdel(OLDKEY); tok=null; $('btnForget').hidden=true;
+      if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+      msg('저장된 토큰을 지웠습니다.');
+    });
+    $('pollSec').addEventListener('change', function(){ sset(POLL_KEY, this.value); resetPoll(); });
+    document.addEventListener('visibilitychange', function(){
+      if(document.visibilityState==='visible'){
+        var t=tok||loadTok();
+        if(t && (!lastSyncAt || Date.now()-lastSyncAt>15000)) sync(t);
+      }
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#perfTabs button'), function(b){
+      b.addEventListener('click', function(){ PERIOD=b.getAttribute('data-p'); sset(PERF_KEY, PERIOD); if(T.length) perf(); });
+    });
+    $('btnCopyPerf').addEventListener('click', function(){
+      if(!LAST_PERF) return;
+      copyText(LAST_PERF).then(function(ok){ msg(ok ? '성과 요약을 복사했습니다. 주간보고에 붙여넣으세요.' : '복사하지 못했습니다.', ok?'ok':'err'); });
+    });
+    setInterval(tick, 1000);
+  }
+
+  function start(){
+    var me = ME.label + (ME.role?' '+ME.role:'');
+    $('title').textContent = me + ' 업무 현황판';
+    $('eyebrow').textContent = '벌툰가맹부 · 개인 업무 현황판';
+    $('asanaLink').href = 'https://app.asana.com/0/'+ME.gid+'/board';
+    document.title = ME.label + ' 업무 현황판 | 벌툰가맹부';
+    var t0 = todayKST();
+    $('todayLabel').textContent = (t0.getMonth()+1)+'월 '+t0.getDate()+'일 '+DOW[t0.getDay()]+'요일';
+    var ps = sget(POLL_KEY); if(ps!=null) $('pollSec').value = ps;
+    wire();
+    var saved = loadTok();
+    if(saved && window.fetch){ $('btnForget').hidden=false; sync(saved); }
+    else { $('emptyView').hidden=false; msg('아사나에 연결하면 실시간으로 불러옵니다.'); }
+  }
+  start();
+})();
+</script>
+</body>
+</html>
