@@ -217,6 +217,7 @@
   </div>
 
   <div class="live">
+    <a href="me.html" id="meLink" style="font-size:13px; color:#FAF7F2; background:#F29801; border:.5px solid #F29801; padding:7px 14px; text-decoration:none">내 현황판</a>
     <button class="primary" id="btnSync">새로고침</button>
     <button id="btnSave" hidden>data.json 내려받기</button>
     <button id="btnForget" hidden>토큰 삭제</button>
@@ -351,7 +352,7 @@
       <h2 id="pvName"></h2>
       <span class="role2" id="pvRole"></span>
     </div>
-    <button class="primary" id="btnHome">메인으로 가기</button>
+    <span style="display:flex; gap:8px"><a id="pvBoardLink" href="me.html" style="font-size:13px; border:.5px solid #DDD3C4; background:#FDFBF7; padding:7px 14px; text-decoration:none; color:#2A2520">이 사람 현황판</a><button class="primary" id="btnHome">메인으로 가기</button></span>
   </div>
   <div class="pkpis" id="pvKpis"></div>
   <div class="board" id="pvBoard"></div>
@@ -650,6 +651,7 @@
     var meta = PEOPLE.filter(function(p){return p.label===name;})[0] || {role:''};
     document.getElementById('pvName').textContent = name + ' 업무 보드';
     document.getElementById('pvRole').textContent = meta.role || '';
+    document.getElementById('pvBoardLink').href = 'me.html?who=' + encodeURIComponent(name);
     var list = T.filter(function(t){return t.owner===name;});
     var done = list.filter(function(t){return t.d;}).length;
     var open = list.filter(function(t){return !t.d;}).length;
