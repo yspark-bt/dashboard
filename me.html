@@ -185,7 +185,8 @@
       <span class="rule"></span>
     </div>
     <div class="nav">
-      <a class="btn" href="index.html">팀 대시보드</a>
+      <select id="whoSel" aria-label="다른 사람 현황판 보기"></select>
+      <a class="btn primary" href="index.html">메인으로 가기</a>
       <a class="btn" id="asanaLink" href="#" target="_blank" rel="noopener">아사나에서 열기 ↗</a>
     </div>
   </div>
@@ -799,6 +800,10 @@
     var t0 = todayKST();
     $('todayLabel').textContent = (t0.getMonth()+1)+'월 '+t0.getDate()+'일 '+DOW[t0.getDay()]+'요일';
     var ps = sget(POLL_KEY); if(ps!=null) $('pollSec').value = ps;
+    $('whoSel').innerHTML = PEOPLE.map(function(p){
+      return '<option value="'+esc(p.label)+'"'+(p.label===ME.label?' selected':'')+'>'+esc(p.label)+(p.role?' '+esc(p.role):'')+'</option>';
+    }).join('');
+    $('whoSel').addEventListener('change', function(){ location.href = '?who=' + encodeURIComponent(this.value); });
     wire();
     var saved = loadTok();
     if(saved && window.fetch){ $('btnForget').hidden=false; sync(saved); }
